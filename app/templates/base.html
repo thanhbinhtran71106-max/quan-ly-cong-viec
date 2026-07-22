@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Employee Task Scheduler{% endblock %} | ETS</title>
+    <title>{% block title %}bt lam web{% endblock %} | bt lam web</title>
     <meta name="description" content="Hệ thống phân công công việc nhân viên theo tuần">
 
     <!-- Bootstrap 5 CSS -->
@@ -25,8 +25,7 @@
             <i class="bi bi-calendar2-week-fill"></i>
         </div>
         <div class="brand-text">
-            <span class="brand-title">ETS</span>
-            <span class="brand-sub">Task Scheduler</span>
+            <span class="brand-title" style="font-size: 1.1rem;">bt lam web</span>
         </div>
     </div>
 
@@ -37,6 +36,11 @@
                class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('main.about') }}"
+               class="nav-link {% if request.endpoint == 'main.about' %}active{% endif %}">
+                <i class="bi bi-info-square"></i>
+                <span>Giới thiệu</span>
             </a>
         </div>
 
