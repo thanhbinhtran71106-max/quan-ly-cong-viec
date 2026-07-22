@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | ETS</title>
+    <meta name="description" content="Hệ thống phân công công việc nhân viên theo tuần">
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./static/css/style.css?v=2">
+    
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">
+            <i class="bi bi-clipboard2-check-fill"></i>
+        </div>
+        <div class="brand-text">
+            <span class="brand-title" style="font-size: 1.1rem; line-height: 1.2;">Employee<br>Task Scheduler</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <span class="nav-section-label">Tổng quan</span>
+            <a href="/"
+               class="nav-link active">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/about"
+               class="nav-link ">
+                <i class="bi bi-info-square"></i>
+                <span>Giới thiệu</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-label">Quản lý</span>
+            <a href="/employees/"
+               class="nav-link ">
+                <i class="bi bi-people-fill"></i>
+                <span>Nhân viên</span>
+            </a>
+            <a href="/tasks/"
+               class="nav-link ">
+                <i class="bi bi-list-task"></i>
+                <span>Công việc</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-label">Lịch làm việc</span>
+            <a href="/schedules/assign"
+               class="nav-link ">
+                <i class="bi bi-person-plus-fill"></i>
+                <span>Phân công</span>
+            </a>
+            <a href="/schedules/"
+               class="nav-link ">
+                <i class="bi bi-calendar3-week"></i>
+                <span>Lịch tuần</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer d-flex align-items-center gap-3 w-100" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="avatar-sm bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.2rem;">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-grow-1 overflow-hidden">
+            <div class="fw-bold text-white text-truncate" style="font-size: 0.95rem;">admin</div>
+            <div class="text-white-50 text-truncate" style="font-size: 0.8rem;">Quản trị viên</div>
+        </div>
+        <i class="bi bi-chevron-down text-white-50 ms-auto" style="cursor: pointer;"></i>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-wrapper" id="mainWrapper">
+    <!-- Top Navbar -->
+    <nav class="top-navbar">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="navbar-breadcrumb">
+            
+<!-- In this new layout, the top navbar has "Dashboard" title -->
+<h2 class="navbar-title"><i class="bi bi-list d-inline-block d-md-none me-2 sidebar-toggle-btn" id="mobileSidebarToggle"></i> Dashboard</h2>
+
+        </div>
+        <div class="navbar-actions">
+            <a href="/schedules/assign" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Phân công mới
+            </a>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="page-content">
+        <!-- Flash Messages -->
+        
+        
+        
+
+        
+<!-- Navbar Right Items (Date, Time, Bell) -->
+<div class="d-none" id="navbarRightContent">
+    <div class="navbar-time d-flex align-items-center fw-medium">
+        <i class="bi bi-clock"></i> <span id="currentTime" class="ms-1">--:--:--</span>
+    </div>
+    
+    <div class="navbar-time ms-4 d-flex align-items-center fw-medium">
+        <i class="bi bi-calendar3"></i> <span class="ms-1">Thứ tư, 22/07/2026</span>
+    </div>
+    <div class="ms-4 position-relative" style="cursor: pointer;">
+        <i class="bi bi-bell-fill" style="font-size: 1.2rem; color: #4b5563;"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; transform: translate(-30%, 10%) !important;">
+            3
+        </span>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng nhân viên</div>
+                <div class="stat-number">6</div>
+                <div class="stat-trend text-success"><span class="fw-bold">+ 2</span> so với tuần trước</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-green">
+            <div class="stat-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng công việc</div>
+                <div class="stat-number">8</div>
+                <div class="stat-trend text-success"><span class="fw-bold">+ 3</span> so với tuần trước</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-orange">
+            <div class="stat-icon"><i class="bi bi-calendar-event-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng lịch phân công</div>
+                <div class="stat-number">17</div>
+                <div class="stat-trend text-success"><span class="fw-bold">+ 8</span> so với tuần trước</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-purple">
+            <div class="stat-icon"><i class="bi bi-person-workspace"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Hôm nay làm việc</div>
+                <div class="stat-number">3</div>
+                <div class="stat-trend"><a href="#" class="text-decoration-none text-muted">Chi tiết →</a></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column -->
+    <div class="dashboard-col-left">
+        <!-- Quick Assign -->
+        <div class="card card-custom mb-4">
+            <div class="card-header-custom">
+                <h5 class="mb-0 text-primary"><i class="bi bi-calendar-plus me-2"></i>Phân công nhanh</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/">
+                    <input type="hidden" name="csrf_token" value="IjE3ZDhhM2E1MGUzMzM5NDQ2OWUyZjA2MzMxNjlhYzA0N2Q5Y2I2YzIi.amBAIw.FQ_JxM0hsNy95J34P_t4MsdPLnc">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Nhân viên</label>
+                        <select name="employee_id" class="form-select form-select-sm" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                            
+                            <option value="5">Hoàng Đức Dũng</option>
+                            
+                            <option value="3">Lê Minh Cường</option>
+                            
+                            <option value="1">Nguyễn Văn An</option>
+                            
+                            <option value="4">Phạm Thu Hà</option>
+                            
+                            <option value="2">Trần Thị Bình</option>
+                            
+                            <option value="6">Võ Thị Lan</option>
+                            
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Công việc</label>
+                        <select name="task_id" class="form-select form-select-sm" required>
+                            <option value="">-- Chọn công việc --</option>
+                            
+                            <option value="7">Bảo trì máy chủ</option>
+                            
+                            <option value="2">Họp khách hàng Q3</option>
+                            
+                            <option value="3">Kiểm thử hệ thống</option>
+                            
+                            <option value="6">Lập báo cáo tài chính</option>
+                            
+                            <option value="1">Phát triển module đăng nhập</option>
+                            
+                            <option value="4">Soạn thảo hợp đồng</option>
+                            
+                            <option value="8">Thiết kế giao diện người dùng</option>
+                            
+                            <option value="5">Đào tạo nhân viên mới</option>
+                            
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Ngày làm việc</label>
+                        <div class="input-group input-group-sm">
+                            <input type="date" name="work_date" class="form-control" required value="2026-07-22" min="2026-07-22">
+                            <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Ca làm việc</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="shift" id="shift1" value="morning" checked>
+                            <label class="form-check-label fw-medium" for="shift1" style="color: #4b5563;">
+                                Ca sáng (07:30 - 11:30)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="shift" id="shift2" value="afternoon">
+                            <label class="form-check-label text-muted" for="shift2">
+                                Ca chiều (13:00 - 17:00)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-2"></i>Lưu phân công</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Today's Tasks -->
+        <div class="card card-custom">
+            <div class="card-header-custom">
+                <h5 class="mb-0 text-primary"><i class="bi bi-bookmark-fill me-2"></i>Công việc hôm nay</h5>
+            </div>
+            <div class="card-body p-0">
+                
+                <ul class="today-task-list">
+                    
+                    <li class="today-task-item">
+                        <div class="task-time">07:30</div>
+                        <div class="task-emp">Lê Minh Cường</div>
+                        <div class="task-name text-muted">Phát triển module đăng nhập</div>
+                        <div>
+                            
+                            <span class="badge task-morning rounded-pill px-3 py-2 fw-medium">Sáng</span>
+                            
+                        </div>
+                    </li>
+                    
+                    <li class="today-task-item">
+                        <div class="task-time">07:30</div>
+                        <div class="task-emp">Phạm Thu Hà</div>
+                        <div class="task-name text-muted">Bảo trì máy chủ</div>
+                        <div>
+                            
+                            <span class="badge task-morning rounded-pill px-3 py-2 fw-medium">Sáng</span>
+                            
+                        </div>
+                    </li>
+                    
+                    <li class="today-task-item">
+                        <div class="task-time">13:00</div>
+                        <div class="task-emp">Võ Thị Lan</div>
+                        <div class="task-name text-muted">Thiết kế giao diện người dùng</div>
+                        <div>
+                            
+                            <span class="badge task-afternoon rounded-pill px-3 py-2 fw-medium">Chiều</span>
+                            
+                        </div>
+                    </li>
+                    
+                </ul>
+                <div class="p-3 text-center border-top">
+                    <a href="/schedules/" class="text-decoration-none small fw-bold text-primary">Xem tất cả →</a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column (Weekly Grid) -->
+    <div class="dashboard-col-right">
+        <div class="card card-custom">
+            <div class="card-header-custom d-flex flex-wrap gap-3 align-items-center bg-white border-bottom-0 pb-0">
+                <h5 class="mb-0 text-primary me-auto"><i class="bi bi-calendar3-week me-2"></i>Lịch làm việc tuần này</h5>
+                
+                <div class="d-flex align-items-center bg-light rounded px-2 py-1 border">
+                    <button class="btn btn-sm btn-link text-dark p-1 text-decoration-none"><i class="bi bi-chevron-left"></i></button>
+                    <span class="mx-3 small fw-bold">Tuần này</span>
+                    <button class="btn btn-sm btn-link text-dark p-1 text-decoration-none"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                
+                <div class="small fw-bold text-dark mx-2">
+                    20/07/2026 - 25/07/2026
+                </div>
+                
+                <div class="btn-group border rounded">
+                    <button class="btn btn-sm btn-primary px-3 rounded-0 rounded-start">Tuần</button>
+                    <button class="btn btn-sm btn-light border-0 px-3 rounded-0 rounded-end">Danh sách</button>
+                </div>
+            </div>
+            
+            <div class="card-body pt-3">
+                <div class="schedule-table-wrapper">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th class="emp-col bg-light border-0 border-bottom text-center">Nhân viên</th>
+                                
+                                
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">Thứ 2</div>
+                                    <div class="small text-muted">20/07</div>
+                                </th>
+                                
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">Thứ 3</div>
+                                    <div class="small text-muted">21/07</div>
+                                </th>
+                                
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">Thứ 4</div>
+                                    <div class="small text-muted">22/07</div>
+                                </th>
+                                
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">Thứ 5</div>
+                                    <div class="small text-muted">23/07</div>
+                                </th>
+                                
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">Thứ 6</div>
+                                    <div class="small text-muted">24/07</div>
+                                </th>
+                                
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">Thứ 7</div>
+                                    <div class="small text-muted">25/07</div>
+                                </th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">H</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">Hoàng Đức Dũng</div>
+                                            <div class="small text-muted text-truncate">Kế toán</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Lập báo cáo tài chính">
+                                                Lập báo cáo tài chính
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Soạn thảo hợp đồng">
+                                                Soạn thảo hợp đồng
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            
+                            
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">L</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">Lê Minh Cường</div>
+                                            <div class="small text-muted text-truncate">Kinh doanh</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Kiểm thử hệ thống">
+                                                Kiểm thử hệ thống
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Phát triển module đăng nhập">
+                                                Phát triển module đăng nhập
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Lập báo cáo tài chính">
+                                                Lập báo cáo tài chính
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            
+                            
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">N</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">Nguyễn Văn An</div>
+                                            <div class="small text-muted text-truncate">Kỹ thuật</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Phát triển module đăng nhập">
+                                                Phát triển module đăng nhập
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Đào tạo nhân viên mới">
+                                                Đào tạo nhân viên mới
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Họp khách hàng Q3">
+                                                Họp khách hàng Q3
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Bảo trì máy chủ">
+                                                Bảo trì máy chủ
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            
+                            
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">P</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">Phạm Thu Hà</div>
+                                            <div class="small text-muted text-truncate">Nhân sự</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Soạn thảo hợp đồng">
+                                                Soạn thảo hợp đồng
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Bảo trì máy chủ">
+                                                Bảo trì máy chủ
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Phát triển module đăng nhập">
+                                                Phát triển module đăng nhập
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            
+                            
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">T</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">Trần Thị Bình</div>
+                                            <div class="small text-muted text-truncate">Kỹ thuật</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Họp khách hàng Q3">
+                                                Họp khách hàng Q3
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Kiểm thử hệ thống">
+                                                Kiểm thử hệ thống
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Đào tạo nhân viên mới">
+                                                Đào tạo nhân viên mới
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            
+                            
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">V</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">Võ Thị Lan</div>
+                                            <div class="small text-muted text-truncate">Kinh doanh</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Thiết kế giao diện người dùng">
+                                                Thiết kế giao diện người dùng
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="Kiểm thử hệ thống">
+                                                Kiểm thử hệ thống
+                                            </span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="p-0 border-bottom">
+                                    
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content">
+                                            
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
+                                            
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-content-center gap-5 mt-4 mb-2 small fw-medium text-muted">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-block rounded" style="width: 20px; height: 10px; background-color: #e9f2ff; border: 1px solid rgba(36,108,243,0.2);"></span> 
+                        <span>Ca sáng (07:30 - 11:30)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-block rounded" style="width: 20px; height: 10px; background-color: #e9f7ef; border: 1px solid rgba(39,167,118,0.2);"></span> 
+                        <span>Ca chiều (13:00 - 17:00)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-block rounded bg-light border" style="width: 20px; height: 10px; background-color: #f5f6f8 !important;"></span> 
+                        <span>Không có lịch</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </main>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="./static/js/main.js"></script>
+
+<script>
+    // Move the navbar content to the actual navbar
+    document.addEventListener('DOMContentLoaded', function() {
+        const rightContent = document.getElementById('navbarRightContent');
+        const navbarActions = document.querySelector('.navbar-actions');
+        if (rightContent && navbarActions) {
+            navbarActions.innerHTML = '';
+            navbarActions.appendChild(rightContent);
+            rightContent.classList.remove('d-none');
+            rightContent.classList.add('d-flex', 'align-items-center');
+        }
+        
+        // Update Time
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    });
+</script>
+
+</body>
+</html>
