@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý Nhân viên{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">
+            <i class="fa-solid fa-users me-2 text-primary"></i>Quản lý Nhân viên
+        </h1>
+        <p class="page-subtitle">Danh sách toàn bộ nhân viên trong hệ thống</p>
+    </div>
+    <a href="{{ url_for('employees.add') }}" class="btn btn-primary btn-glow" id="addEmployeeBtn">
+        <i class="fa-solid fa-plus me-2"></i>Thêm nhân viên
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="card-glass mb-4">
+    <div class="card-glass-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small text-muted">Tìm kiếm</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-secondary">
+                        <i class="fa-solid fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-secondary bg-transparent"
+                           placeholder="Tên, mã, email..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Bộ phận</label>
+                <select name="department" class="form-select border-secondary bg-transparent">
+                    <option value="">-- Tất cả --</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept }}" {% if dept == selected_dept %}selected{% endif %}>
+                            {{ dept }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill" id="searchBtn">
+                    <i class="fa-solid fa-filter me-1"></i>Lọc
+                </button>
+                <a href="{{ url_for('employees.index') }}" class="btn btn-outline-secondary" id="clearFilterBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card-glass">
+    <div class="card-glass-header d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-table me-2"></i>Danh sách nhân viên</span>
+        <span class="badge bg-primary">{{ employees|length }} người</span>
+    </div>
+    <div class="card-glass-body p-0">
+        {% if employees %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="employeeTable">
+                <thead>
+                    <tr>
+                        <th>Mã NV</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Bộ phận</th>
+                        <th>Chức vụ</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in employees %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ emp.employee_code }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="emp-avatar-sm">{{ emp.full_name[0] }}</div>
+                                <strong>{{ emp.full_name }}</strong>
+                            </div>
+                        </td>
+                        <td><a href="mailto:{{ emp.email }}" class="text-info">{{ emp.email }}</a></td>
+                        <td>{{ emp.phone }}</td>
+                        <td><span class="badge bg-dept">{{ emp.department }}</span></td>
+                        <td>{{ emp.position }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('employees.edit', emp_id=emp.id) }}"
+                               class="btn btn-sm btn-outline-warning me-1" title="Sửa"
+                               id="editEmp{{ emp.id }}">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form method="post"
+                                  action="{{ url_for('employees.delete', emp_id=emp.id) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Xóa nhân viên {{ emp.full_name }}?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        title="Xóa" id="deleteEmp{{ emp.id }}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-users-slash fa-3x mb-3 text-muted"></i>
+            <h5 class="text-muted">Không tìm thấy nhân viên nào</h5>
+            <a href="{{ url_for('employees.add') }}" class="btn btn-primary mt-2" id="addFirstEmployee">
+                <i class="fa-solid fa-plus me-2"></i>Thêm nhân viên đầu tiên
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

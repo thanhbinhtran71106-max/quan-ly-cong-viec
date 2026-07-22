@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Phân công công việc{% endblock %}
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('schedules.weekly_view') }}">Lịch làm việc</a></li>
+<li class="breadcrumb-item active">Phân công</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-person-plus-fill me-2 text-primary"></i>Phân công công việc
+    </h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-header-custom">
+                <h5 class="mb-0"><i class="bi bi-calendar-plus me-2 text-primary"></i>Tạo lịch phân công</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" id="assignForm" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row g-3">
+                        <!-- Employee -->
+                        <div class="col-md-6">
+                            <label class="form-label required">Nhân viên</label>
+                            <select name="employee_id" class="form-select" required id="empSelect">
+                                <option value="">-- Chọn nhân viên --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}">{{ emp.employee_code }} - {{ emp.full_name }} ({{ emp.department }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Task -->
+                        <div class="col-md-6">
+                            <label class="form-label required">Công việc</label>
+                            <select name="task_id" class="form-select" required>
+                                <option value="">-- Chọn công việc --</option>
+                                {% for task in tasks %}
+                                <option value="{{ task.id }}"
+                                    data-priority="{{ task.priority }}"
+                                    data-duration="{{ task.duration }}">
+                                    {{ task.task_code }} - {{ task.task_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="col-md-6">
+                            <label class="form-label required">Ngày làm việc</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" name="work_date" class="form-control"
+                                       id="workDate" required
+                                       min="{{ today_str }}">
+                            </div>
+                            <div class="form-text text-warning">
+                                <i class="bi bi-info-circle me-1"></i>Chỉ từ Thứ Hai đến Thứ Bảy
+                            </div>
+                        </div>
+
+                        <!-- Shift -->
+                        <div class="col-md-6">
+                            <label class="form-label required">Ca làm việc</label>
+                            <div class="shift-selector">
+                                <div class="shift-option" id="shiftMorning">
+                                    <input type="radio" name="shift" value="morning" id="radioMorning" required>
+                                    <label for="radioMorning" class="shift-label-btn">
+                                        <i class="bi bi-sunrise-fill text-warning"></i>
+                                        <div>
+                                            <strong>Ca Sáng</strong>
+                                            <small class="d-block text-muted">07:30 – 11:30</small>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="shift-option" id="shiftAfternoon">
+                                    <input type="radio" name="shift" value="afternoon" id="radioAfternoon">
+                                    <label for="radioAfternoon" class="shift-label-btn">
+                                        <i class="bi bi-sunset-fill text-orange"></i>
+                                        <div>
+                                            <strong>Ca Chiều</strong>
+                                            <small class="d-block text-muted">13:00 – 17:00</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Note -->
+                        <div class="col-12">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea name="note" class="form-control" rows="2"
+                                      placeholder="Ghi chú thêm (không bắt buộc)..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Conflict warning area -->
+                    <div id="conflictWarning" class="alert alert-warning d-none mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <span id="conflictMsg"></span>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('schedules.weekly_view') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-calendar-check me-1"></i>Xác nhận phân công
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="card card-custom mt-3">
+            <div class="card-body">
+                <h6 class="text-muted mb-2"><i class="bi bi-info-circle me-1"></i>Lưu ý</h6>
+                <ul class="mb-0 small text-muted">
+                    <li>Hệ thống hoạt động từ <strong>Thứ Hai đến Thứ Bảy</strong></li>
+                    <li>Mỗi nhân viên chỉ được phân công <strong>tối đa 1 công việc mỗi ca</strong></li>
+                    <li>Nếu nhân viên đã có lịch trong ca đó, hệ thống sẽ từ chối phân công</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set today as default date
+const today = new Date();
+const dayOfWeek = today.getDay(); // 0=Sun, 6=Sat
+const workDate = document.getElementById('workDate');
+
+// Default to Monday if today is Sunday
+let defaultDate = today;
+if (dayOfWeek === 0) defaultDate = new Date(today.setDate(today.getDate() + 1));
+workDate.value = defaultDate.toISOString().split('T')[0];
+
+// Validate day of week on date change
+workDate.addEventListener('change', function() {
+    const selected = new Date(this.value + 'T00:00:00');
+    const dow = selected.getDay();
+    if (dow === 0) { // Sunday
+        document.getElementById('conflictWarning').classList.remove('d-none');
+        document.getElementById('conflictMsg').textContent = 'Chủ Nhật không phải ngày làm việc. Vui lòng chọn Thứ Hai – Thứ Bảy.';
+        document.getElementById('submitBtn').disabled = true;
+    } else {
+        document.getElementById('conflictWarning').classList.add('d-none');
+        document.getElementById('submitBtn').disabled = false;
+    }
+});
+</script>
+{% endblock %}

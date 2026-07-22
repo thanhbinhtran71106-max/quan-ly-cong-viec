@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{% if action == 'add' %}Thêm nhân viên{% else %}Sửa nhân viên{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('employees.list_employees') }}">Nhân viên</a></li>
+<li class="breadcrumb-item active">{% if action == 'add' %}Thêm mới{% else %}Chỉnh sửa{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-person-{% if action == 'add' %}add{% else %}gear{% endif %} me-2 text-primary"></i>
+        {% if action == 'add' %}Thêm nhân viên mới{% else %}Chỉnh sửa: {{ employee.full_name }}{% endif %}
+    </h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <form method="POST" id="employeeForm" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label required">Mã nhân viên</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-id-card"></i></span>
+                                <input type="text" name="employee_code" class="form-control"
+                                       placeholder="VD: NV001"
+                                       value="{{ employee.employee_code if employee else '' }}"
+                                       required maxlength="20">
+                            </div>
+                            <div class="form-text">Mã nhân viên phải là duy nhất</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Họ và tên</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" name="full_name" class="form-control"
+                                       placeholder="Nguyễn Văn A"
+                                       value="{{ employee.full_name if employee else '' }}"
+                                       required maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" name="email" class="form-control"
+                                       placeholder="email@company.vn"
+                                       value="{{ employee.email if employee else '' }}"
+                                       required maxlength="120">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Số điện thoại</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                <input type="tel" name="phone" class="form-control"
+                                       placeholder="0901234567"
+                                       value="{{ employee.phone if employee else '' }}"
+                                       required maxlength="20"
+                                       pattern="[0-9]{9,11}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Bộ phận</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                <input type="text" name="department" class="form-control"
+                                       placeholder="VD: Kỹ thuật, Kinh doanh..."
+                                       value="{{ employee.department if employee else '' }}"
+                                       required maxlength="50"
+                                       list="deptList">
+                                <datalist id="deptList">
+                                    <option value="Kỹ thuật">
+                                    <option value="Kinh doanh">
+                                    <option value="Nhân sự">
+                                    <option value="Kế toán">
+                                    <option value="Marketing">
+                                    <option value="Vận hành">
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Chức vụ</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span>
+                                <input type="text" name="position" class="form-control"
+                                       placeholder="VD: Kỹ sư phần mềm..."
+                                       value="{{ employee.position if employee else '' }}"
+                                       required maxlength="50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('employees.list_employees') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-{% if action == 'add' %}plus-circle{% else %}save{% endif %} me-1"></i>
+                            {% if action == 'add' %}Thêm nhân viên{% else %}Lưu thay đổi{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

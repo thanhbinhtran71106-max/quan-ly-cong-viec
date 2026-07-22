@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<!-- In this new layout, the top navbar has "Dashboard" title -->
+<h2 class="navbar-title"><i class="bi bi-list d-inline-block d-md-none me-2 sidebar-toggle-btn" id="mobileSidebarToggle"></i> Dashboard</h2>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar Right Items (Date, Time) -->
+<div class="d-none" id="navbarRightContent">
+    <div class="navbar-time">
+        <i class="bi bi-clock"></i> <span id="currentTime">--:--:--</span>
+    </div>
+    <div class="navbar-time ms-3">
+        <i class="bi bi-calendar3"></i> <span>{{ today.strftime('%A, %d/%m/%Y') }}</span>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng nhân viên</div>
+                <div class="stat-number">{{ total_employees }}</div>
+                <div class="stat-trend text-success"><i class="bi bi-arrow-up-short"></i> Cập nhật</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-green">
+            <div class="stat-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng công việc</div>
+                <div class="stat-number">{{ total_tasks }}</div>
+                <div class="stat-trend text-success"><i class="bi bi-arrow-up-short"></i> Cập nhật</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-orange">
+            <div class="stat-icon"><i class="bi bi-calendar-event-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng lịch phân công</div>
+                <div class="stat-number">{{ total_schedules }}</div>
+                <div class="stat-trend text-success"><i class="bi bi-arrow-up-short"></i> Tuần này</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-purple">
+            <div class="stat-icon"><i class="bi bi-person-workspace"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Hôm nay làm việc</div>
+                <div class="stat-number">{{ today_employees }}</div>
+                <div class="stat-trend"><a href="#" class="text-decoration-none text-muted">Chi tiết →</a></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column -->
+    <div class="dashboard-col-left">
+        <!-- Quick Assign -->
+        <div class="card card-custom mb-4">
+            <div class="card-header-custom">
+                <h5 class="mb-0 text-primary"><i class="bi bi-calendar-plus me-2"></i>Phân công nhanh</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.index') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Nhân viên</label>
+                        <select name="employee_id" class="form-select form-select-sm" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Công việc</label>
+                        <select name="task_id" class="form-select form-select-sm" required>
+                            <option value="">-- Chọn công việc --</option>
+                            {% for task in tasks %}
+                            <option value="{{ task.id }}">{{ task.task_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Ngày làm việc</label>
+                        <div class="input-group input-group-sm">
+                            <input type="date" name="work_date" class="form-control" required value="{{ today.strftime('%Y-%m-%d') }}" min="{{ today.strftime('%Y-%m-%d') }}">
+                            <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Ca làm việc</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="shift" id="shift1" value="morning" checked>
+                            <label class="form-check-label text-primary" for="shift1">
+                                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Ca sáng (07:30 - 11:30)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="shift" id="shift2" value="afternoon">
+                            <label class="form-check-label text-muted" for="shift2">
+                                <i class="bi bi-circle-fill me-1 text-light" style="font-size: 0.5rem; border: 1px solid #ccc; border-radius: 50%;"></i> Ca chiều (13:00 - 17:00)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-2"></i>Lưu phân công</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Today's Tasks -->
+        <div class="card card-custom">
+            <div class="card-header-custom">
+                <h5 class="mb-0 text-primary"><i class="bi bi-bookmark-fill me-2"></i>Công việc hôm nay</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if today_schedules %}
+                <ul class="today-task-list">
+                    {% for s in today_schedules %}
+                    <li class="today-task-item">
+                        <div class="task-time">{{ '07:30' if s.shift == 'morning' else '13:00' }}</div>
+                        <div class="task-emp">{{ s.employee.full_name }}</div>
+                        <div class="task-name text-muted">{{ s.task.task_name }}</div>
+                        <div>
+                            {% if s.shift == 'morning' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">Sáng</span>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">Chiều</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="p-3 text-center border-top">
+                    <a href="{{ url_for('schedules.weekly_view') }}" class="text-decoration-none small fw-bold text-primary">Xem tất cả →</a>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <p class="mb-0 small">Không có lịch làm việc hôm nay.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column (Weekly Grid) -->
+    <div class="dashboard-col-right">
+        <div class="card card-custom">
+            <div class="card-header-custom d-flex flex-wrap gap-3 align-items-center bg-white border-bottom-0 pb-0">
+                <h5 class="mb-0 text-primary me-auto"><i class="bi bi-calendar3-week me-2"></i>Lịch làm việc tuần này</h5>
+                
+                <div class="d-flex align-items-center bg-light rounded px-2 py-1 border">
+                    <button class="btn btn-sm btn-link text-dark p-1 text-decoration-none"><i class="bi bi-chevron-left"></i></button>
+                    <span class="mx-3 small fw-bold">Tuần này</span>
+                    <button class="btn btn-sm btn-link text-dark p-1 text-decoration-none"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                
+                <div class="small fw-bold text-dark mx-2">
+                    {{ monday.strftime('%d/%m/%Y') }} - {{ saturday.strftime('%d/%m/%Y') }}
+                </div>
+                
+                <div class="btn-group border rounded">
+                    <button class="btn btn-sm btn-primary px-3 rounded-0 rounded-start">Tuần</button>
+                    <button class="btn btn-sm btn-light border-0 px-3 rounded-0 rounded-end">Danh sách</button>
+                </div>
+            </div>
+            
+            <div class="card-body pt-3">
+                <div class="schedule-table-wrapper">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th class="emp-col bg-light border-0 border-bottom text-center">Nhân viên</th>
+                                {% set days_vi = {0: 'Thứ 2', 1: 'Thứ 3', 2: 'Thứ 4', 3: 'Thứ 5', 4: 'Thứ 6', 5: 'Thứ 7'} %}
+                                {% for d in work_dates %}
+                                <th class="bg-light border-0 border-bottom">
+                                    <div class="fw-bold">{{ days_vi[d.weekday()] }}</div>
+                                    <div class="small text-muted">{{ d.strftime('%d/%m') }}</div>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in weekly_grid %}
+                            {% set emp = item.employee %}
+                            <tr>
+                                <!-- Employee Info -->
+                                <td class="emp-col border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm flex-shrink-0">{{ emp.full_name[0] }}</div>
+                                        <div class="overflow-hidden">
+                                            <div class="fw-bold small text-truncate">{{ emp.full_name }}</div>
+                                            <div class="small text-muted text-truncate">{{ emp.department }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Days -->
+                                {% for d in work_dates %}
+                                <td class="p-0 border-bottom">
+                                    {% set day_data = item.dates[d] %}
+                                    
+                                    <!-- Morning Shift -->
+                                    <div class="shift-row shift-morning">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold text-primary" style="font-size:0.7rem">Sáng</span>
+                                            <span style="font-size:0.6rem">07:30-11:30</span>
+                                        </div>
+                                        <div class="shift-content {% if day_data.morning %}bg-primary-subtle{% endif %}">
+                                            {% if day_data.morning %}
+                                            <span class="text-primary small fw-medium text-center px-1 w-100 d-block text-truncate" title="{{ day_data.morning.task.task_name }}">
+                                                {{ day_data.morning.task.task_name }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Afternoon Shift -->
+                                    <div class="shift-row shift-afternoon">
+                                        <div class="shift-label flex-column bg-light-subtle">
+                                            <span class="fw-bold text-success" style="font-size:0.7rem">Chiều</span>
+                                            <span style="font-size:0.6rem">13:00-17:00</span>
+                                        </div>
+                                        <div class="shift-content {% if day_data.afternoon %}bg-success-subtle{% endif %}">
+                                            {% if day_data.afternoon %}
+                                            <span class="text-success small fw-medium text-center px-1 w-100 d-block text-truncate" title="{{ day_data.afternoon.task.task_name }}">
+                                                {{ day_data.afternoon.task.task_name }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-content-center gap-4 mt-4 mb-2 small fw-bold">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-block rounded-pill" style="width:12px;height:12px;background-color:var(--bs-primary-bg-subtle)"></span> 
+                        <span class="text-muted">Ca sáng (07:30 - 11:30)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-block rounded-pill" style="width:12px;height:12px;background-color:var(--bs-success-bg-subtle)"></span> 
+                        <span class="text-muted">Ca chiều (13:00 - 17:00)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-block rounded-pill bg-light border" style="width:12px;height:12px;"></span> 
+                        <span class="text-muted">Không có lịch</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Move the navbar content to the actual navbar
+    document.addEventListener('DOMContentLoaded', function() {
+        const rightContent = document.getElementById('navbarRightContent');
+        const navbarActions = document.querySelector('.navbar-actions');
+        if (rightContent && navbarActions) {
+            navbarActions.innerHTML = '';
+            navbarActions.appendChild(rightContent);
+            rightContent.classList.remove('d-none');
+            rightContent.classList.add('d-flex', 'align-items-center');
+        }
+        
+        // Update Time
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    });
+</script>
+{% endblock %}

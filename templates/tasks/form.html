@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{% if action == 'add' %}Thêm{% else %}Sửa{% endif %} Công việc{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fa-solid fa-{% if action == 'add' %}plus-circle{% else %}pen-to-square{% endif %} me-2 text-purple"></i>
+        {% if action == 'add' %}Thêm Công việc mới{% else %}Chỉnh sửa Công việc{% endif %}
+    </h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-glass">
+            <div class="card-glass-header">
+                <i class="fa-solid fa-clipboard-list me-2"></i>Thông tin công việc
+            </div>
+            <div class="card-glass-body">
+                <form method="post" id="taskForm">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="task_code" class="form-label">Mã công việc <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-secondary bg-transparent"
+                                   id="task_code" name="task_code" required
+                                   value="{{ task.task_code if task else '' }}"
+                                   placeholder="VD: CV001">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="task_name" class="form-label">Tên công việc <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-secondary bg-transparent"
+                                   id="task_name" name="task_name" required
+                                   value="{{ task.task_name if task else '' }}"
+                                   placeholder="Nhập tên công việc...">
+                        </div>
+                        <div class="col-12">
+                            <label for="description" class="form-label">Mô tả</label>
+                            <textarea class="form-control border-secondary bg-transparent"
+                                      id="description" name="description" rows="3"
+                                      placeholder="Mô tả chi tiết công việc...">{{ task.description if task else '' }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="priority" class="form-label">Độ ưu tiên <span class="text-danger">*</span></label>
+                            <select class="form-select border-secondary bg-transparent"
+                                    id="priority" name="priority">
+                                {% for key, label in priority_labels.items() %}
+                                    <option value="{{ key }}"
+                                        {% if task and task.priority == key %}selected
+                                        {% elif not task and key == 'medium' %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="duration" class="form-label">Thời lượng</label>
+                            <input type="text" class="form-control border-secondary bg-transparent"
+                                   id="duration" name="duration"
+                                   value="{{ task.duration if task else '' }}"
+                                   placeholder="VD: 2 giờ, 1 ngày...">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ url_for('tasks.index') }}" class="btn btn-outline-secondary" id="cancelTaskBtn">
+                            <i class="fa-solid fa-xmark me-1"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-glow" id="submitTaskBtn">
+                            <i class="fa-solid fa-{% if action == 'add' %}plus{% else %}save{% endif %} me-1"></i>
+                            {% if action == 'add' %}Thêm công việc{% else %}Lưu thay đổi{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

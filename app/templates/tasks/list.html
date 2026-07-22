@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Quản lý công việc{% endblock %}
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Công việc</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="bi bi-list-task me-2 text-purple"></i>Quản lý công việc</h1>
+        <p class="page-subtitle">Danh sách và quản lý các công việc</p>
+    </div>
+    <a href="{{ url_for('tasks.add_task') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Thêm công việc
+    </a>
+</div>
+
+<!-- Search & Filter -->
+<div class="card card-custom mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Tìm kiếm</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Tên, mã, mô tả..."
+                           value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Độ ưu tiên</label>
+                <select name="priority" class="form-select">
+                    <option value="">-- Tất cả --</option>
+                    {% for p in priorities %}
+                    <option value="{{ p }}" {% if p == selected_priority %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Tìm</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle me-1"></i>Xóa lọc
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Task Table -->
+<div class="card card-custom">
+    <div class="card-header-custom">
+        <h5 class="mb-0">
+            Danh sách công việc
+            <span class="badge bg-primary ms-2">{{ tasks.total }}</span>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        {% if tasks.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã CV</th>
+                        <th>Tên công việc</th>
+                        <th>Mô tả</th>
+                        <th>Độ ưu tiên</th>
+                        <th>Thời lượng</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks.items %}
+                    <tr>
+                        <td><span class="badge bg-purple-subtle text-purple fw-bold">{{ task.task_code }}</span></td>
+                        <td class="fw-medium">{{ task.task_name }}</td>
+                        <td>
+                            {% if task.description %}
+                            <span class="text-muted" title="{{ task.description }}">
+                                {{ task.description[:60] }}{% if task.description|length > 60 %}...{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="text-muted fst-italic">Chưa có mô tả</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge priority-{{ task.priority.lower() }}">{{ task.priority }}</span></td>
+                        <td>
+                            <i class="bi bi-clock text-muted me-1"></i>{{ task.duration }}h
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('tasks.edit_task', task_id=task.id) }}"
+                                   class="btn btn-outline-warning" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" title="Xóa"
+                                        onclick="confirmDelete('{{ url_for('tasks.delete_task', task_id=task.id) }}', '{{ task.task_name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if tasks.pages > 1 %}
+        <div class="d-flex justify-content-center py-3">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if tasks.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('tasks.list_tasks', page=tasks.prev_num, search=search, priority=selected_priority) }}"><i class="bi bi-chevron-left"></i></a>
+                    </li>
+                    {% endif %}
+                    {% for p in tasks.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if p %}
+                        <li class="page-item {% if p == tasks.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('tasks.list_tasks', page=p, search=search, priority=selected_priority) }}">{{ p }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if tasks.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('tasks.list_tasks', page=tasks.next_num, search=search, priority=selected_priority) }}"><i class="bi bi-chevron-right"></i></a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state py-5">
+            <i class="bi bi-clipboard-x display-4 text-muted"></i>
+            <p class="text-muted mt-3">Không tìm thấy công việc nào</p>
+            <a href="{{ url_for('tasks.add_task') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Thêm công việc
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn xóa công việc <strong id="deleteTargetName"></strong>? Tất cả lịch phân công liên quan cũng sẽ bị xóa.
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(url, name) {
+    document.getElementById('deleteTargetName').textContent = name;
+    document.getElementById('deleteForm').action = url;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

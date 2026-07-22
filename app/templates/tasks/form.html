@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{% if action == 'add' %}Thêm công việc{% else %}Sửa công việc{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('tasks.list_tasks') }}">Công việc</a></li>
+<li class="breadcrumb-item active">{% if action == 'add' %}Thêm mới{% else %}Chỉnh sửa{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-{% if action == 'add' %}plus-square{% else %}pencil-square{% endif %} me-2 text-primary"></i>
+        {% if action == 'add' %}Thêm công việc mới{% else %}Chỉnh sửa: {{ task.task_name }}{% endif %}
+    </h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <form method="POST" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label required">Mã công việc</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                <input type="text" name="task_code" class="form-control"
+                                       placeholder="VD: CV001"
+                                       value="{{ task.task_code if task else '' }}"
+                                       required maxlength="20">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Tên công việc</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span>
+                                <input type="text" name="task_name" class="form-control"
+                                       placeholder="Tên công việc..."
+                                       value="{{ task.task_name if task else '' }}"
+                                       required maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Mô tả</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                      placeholder="Mô tả chi tiết về công việc...">{{ task.description if task else '' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Độ ưu tiên</label>
+                            <select name="priority" class="form-select" required>
+                                {% set priorities = ['Low', 'Medium', 'High', 'Critical'] %}
+                                {% for p in priorities %}
+                                <option value="{{ p }}"
+                                    {% if task and task.priority == p %}selected{% elif not task and p == 'Medium' %}selected{% endif %}>
+                                    {{ p }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Thời lượng (giờ)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                                <input type="number" name="duration" class="form-control"
+                                       placeholder="VD: 4"
+                                       value="{{ task.duration if task else '1' }}"
+                                       required min="0.5" max="8" step="0.5">
+                                <span class="input-group-text">giờ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-{% if action == 'add' %}plus-circle{% else %}save{% endif %} me-1"></i>
+                            {% if action == 'add' %}Thêm công việc{% else %}Lưu thay đổi{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

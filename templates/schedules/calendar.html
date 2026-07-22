@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Lịch làm việc theo tuần{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">
+            <i class="fa-solid fa-calendar-week me-2 text-info"></i>Lịch làm việc theo tuần
+        </h1>
+        <p class="page-subtitle">
+            Tuần: {{ week_dates[0].strftime('%d/%m/%Y') }} – {{ week_dates[-1].strftime('%d/%m/%Y') }}
+        </p>
+    </div>
+    <!-- Điều hướng tuần -->
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('schedules.calendar', week=prev_week) }}"
+           class="btn btn-outline-secondary" id="prevWeekBtn">
+            <i class="fa-solid fa-chevron-left"></i> Tuần trước
+        </a>
+        <a href="{{ url_for('schedules.calendar') }}"
+           class="btn btn-outline-primary" id="currentWeekBtn">
+            <i class="fa-solid fa-house"></i> Tuần này
+        </a>
+        <a href="{{ url_for('schedules.calendar', week=next_week) }}"
+           class="btn btn-outline-secondary" id="nextWeekBtn">
+            Tuần sau <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </div>
+</div>
+
+<!-- Calendar Table -->
+<div class="card-glass overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-bordered mb-0 calendar-table" id="calendarTable">
+            <thead>
+                <tr>
+                    <th class="calendar-shift-col text-center">Ca làm việc</th>
+                    {% for d in week_dates %}
+                    <th class="text-center calendar-day-header {% if d == today %}today-col{% endif %}">
+                        <div class="day-name">{{ weekday_vi[d.weekday()] }}</div>
+                        <div class="day-date {% if d == today %}badge bg-primary rounded-pill{% endif %}">
+                            {{ d.strftime('%d/%m') }}
+                        </div>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Ca Sáng -->
+                <tr>
+                    <td class="shift-label morning-shift">
+                        <i class="fa-solid fa-sun me-1 text-warning"></i>
+                        <strong>Ca Sáng</strong>
+                        <div class="small text-muted">07:30 – 11:30</div>
+                    </td>
+                    {% for d in week_dates %}
+                    <td class="calendar-cell {% if d == today %}today-col{% endif %}">
+                        {% set slots = calendar_data[d]['morning'] %}
+                        {% if slots %}
+                            {% for s in slots %}
+                            <div class="schedule-chip chip-morning">
+                                <div class="chip-name">{{ s.employee.full_name }}</div>
+                                <div class="chip-task">{{ s.task.task_name }}</div>
+                                <form method="post"
+                                      action="{{ url_for('schedules.delete', sched_id=s.id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Hủy phân công này?')">
+                                    <button type="submit" class="chip-delete" title="Hủy" id="cal_del_{{ s.id }}">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="cell-empty">—</div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+
+                <!-- Ca Chiều -->
+                <tr>
+                    <td class="shift-label afternoon-shift">
+                        <i class="fa-solid fa-cloud-sun me-1 text-info"></i>
+                        <strong>Ca Chiều</strong>
+                        <div class="small text-muted">13:00 – 17:00</div>
+                    </td>
+                    {% for d in week_dates %}
+                    <td class="calendar-cell {% if d == today %}today-col{% endif %}">
+                        {% set slots = calendar_data[d]['afternoon'] %}
+                        {% if slots %}
+                            {% for s in slots %}
+                            <div class="schedule-chip chip-afternoon">
+                                <div class="chip-name">{{ s.employee.full_name }}</div>
+                                <div class="chip-task">{{ s.task.task_name }}</div>
+                                <form method="post"
+                                      action="{{ url_for('schedules.delete', sched_id=s.id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Hủy phân công này?')">
+                                    <button type="submit" class="chip-delete" title="Hủy" id="cal_del_aft_{{ s.id }}">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="cell-empty">—</div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Legend -->
+<div class="d-flex gap-3 mt-3 flex-wrap">
+    <div class="d-flex align-items-center gap-2">
+        <div class="legend-dot morning-dot"></div>
+        <small class="text-muted">Ca Sáng (07:30–11:30)</small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="legend-dot afternoon-dot"></div>
+        <small class="text-muted">Ca Chiều (13:00–17:00)</small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="legend-dot today-dot"></div>
+        <small class="text-muted">Hôm nay</small>
+    </div>
+</div>
+{% endblock %}

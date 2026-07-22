@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Phân công Công việc{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fa-solid fa-plus-circle me-2 text-success"></i>Phân công Công việc
+    </h1>
+    <p class="page-subtitle">Chọn nhân viên, công việc, ngày và ca làm việc</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card-glass">
+            <div class="card-glass-header">
+                <i class="fa-solid fa-calendar-plus me-2"></i>Thông tin phân công
+            </div>
+            <div class="card-glass-body">
+                <form method="post" id="scheduleForm">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="employee_id" class="form-label">
+                                Nhân viên <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select border-secondary bg-transparent"
+                                    id="employee_id" name="employee_id" required>
+                                <option value="">-- Chọn nhân viên --</option>
+                                {% for emp in employees %}
+                                    <option value="{{ emp.id }}"
+                                        {% if form_data and form_data.employee_id == emp.id|string %}selected{% endif %}>
+                                        [{{ emp.employee_code }}] {{ emp.full_name }} – {{ emp.department }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="task_id" class="form-label">
+                                Công việc <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select border-secondary bg-transparent"
+                                    id="task_id" name="task_id" required>
+                                <option value="">-- Chọn công việc --</option>
+                                {% for task in tasks %}
+                                    <option value="{{ task.id }}"
+                                        {% if form_data and form_data.task_id == task.id|string %}selected{% endif %}>
+                                        [{{ task.task_code }}] {{ task.task_name }}
+                                        {% if task.priority == 'high' %} 🔴
+                                        {% elif task.priority == 'medium' %} 🟡
+                                        {% else %} 🟢{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="work_date" class="form-label">
+                                Ngày làm việc <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control border-secondary bg-transparent"
+                                   id="work_date" name="work_date" required
+                                   value="{{ form_data.work_date if form_data else '' }}">
+                            <div class="form-text text-muted">Chỉ Thứ Hai – Thứ Bảy</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Ca làm việc <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3 mt-1">
+                                {% for key, label in shift_labels.items() %}
+                                <div class="form-check shift-card flex-fill">
+                                    <input class="form-check-input" type="radio"
+                                           name="shift" id="shift_{{ key }}"
+                                           value="{{ key }}" required
+                                           {% if form_data and form_data.shift == key %}checked{% endif %}>
+                                    <label class="form-check-label w-100" for="shift_{{ key }}">
+                                        <span class="shift-label-text">
+                                            {% if key == 'morning' %}
+                                                <i class="fa-solid fa-sun text-warning me-1"></i>
+                                            {% else %}
+                                                <i class="fa-solid fa-cloud-sun text-info me-1"></i>
+                                            {% endif %}
+                                            {{ label }}
+                                        </span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info box -->
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        Hệ thống sẽ tự động kiểm tra xung đột ca. Nếu nhân viên đã có ca đó,
+                        phân công sẽ <strong>không được lưu</strong>.
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ url_for('schedules.index') }}" class="btn btn-outline-secondary" id="cancelScheduleBtn">
+                            <i class="fa-solid fa-xmark me-1"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-success btn-glow" id="submitScheduleBtn">
+                            <i class="fa-solid fa-calendar-plus me-1"></i>Xác nhận phân công
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Không cho chọn Chủ nhật
+document.getElementById('work_date').addEventListener('change', function() {
+    const date = new Date(this.value);
+    if (date.getDay() === 0) {  // 0 = Sunday (UTC), nhưng JS parse khác
+        // Cách an toàn: kiểm tra weekday
+        const parts = this.value.split('-');
+        const d = new Date(parts[0], parts[1]-1, parts[2]);
+        if (d.getDay() === 0) {
+            alert('Hệ thống chỉ làm việc Thứ Hai → Thứ Bảy. Vui lòng chọn ngày khác!');
+            this.value = '';
+        }
+    }
+});
+</script>
+{% endblock %}
