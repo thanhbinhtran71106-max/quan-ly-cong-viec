@@ -31,6 +31,10 @@ def create_app(config_class=Config):
     app.register_blueprint(tasks_bp, url_prefix='/tasks')
     app.register_blueprint(schedules_bp, url_prefix='/schedules')
 
+    with app.app_context():
+        from app import models
+        db.create_all()
+
     return app
 
 
