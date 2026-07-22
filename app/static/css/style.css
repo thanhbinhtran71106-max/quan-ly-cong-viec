@@ -1,22 +1,22 @@
 :root {
-    --primary-color: #0d6efd;
-    --sidebar-bg: #0a2540;
-    --sidebar-hover: #1d3b5c;
-    --sidebar-active: #0d6efd;
-    --bg-color: #e9ecef;
+    --primary-color: #246cf3;
+    --sidebar-bg: #132c52;
+    --sidebar-hover: #1b3d70;
+    --sidebar-active: #246cf3;
+    --bg-color: #f4f7fa;
     --card-bg: #ffffff;
     --text-primary: #333333;
-    --text-muted: #6c757d;
-    --border-color: #dee2e6;
+    --text-muted: #8492a6;
+    --border-color: #eaedf3;
     
-    --stat-blue-bg: #e7f1ff;
-    --stat-blue-text: #0d6efd;
-    --stat-green-bg: #e8f5e9;
-    --stat-green-text: #198754;
-    --stat-orange-bg: #fff3cd;
-    --stat-orange-text: #ffc107;
-    --stat-purple-bg: #f3e5f5;
-    --stat-purple-text: #6f42c1;
+    --stat-blue-bg: #246cf3;
+    --stat-blue-text: #ffffff;
+    --stat-green-bg: #27a776;
+    --stat-green-text: #ffffff;
+    --stat-orange-bg: #ffaa33;
+    --stat-orange-text: #ffffff;
+    --stat-purple-bg: #6a47c7;
+    --stat-purple-text: #ffffff;
 }
 
 [data-bs-theme="dark"] {
@@ -330,8 +330,29 @@ body {
     color: var(--text-muted);
 }
 
-.schedule-table .shift-morning .shift-label { color: #0dcaf0; }
-.schedule-table .shift-afternoon .shift-label { color: #198754; }
+.schedule-table .shift-morning .shift-label { color: #246cf3; }
+.schedule-table .shift-afternoon .shift-label { color: #27a776; }
+
+.task-morning {
+    background-color: #e9f2ff !important;
+    color: #246cf3 !important;
+    border-radius: 4px;
+    padding: 6px 4px;
+}
+
+.task-afternoon {
+    background-color: #e9f7ef !important;
+    color: #27a776 !important;
+    border-radius: 4px;
+    padding: 6px 4px;
+}
+
+.task-empty {
+    background-color: #f5f6f8 !important;
+    color: #8492a6 !important;
+    border-radius: 4px;
+    padding: 6px 4px;
+}
 
 .schedule-table .shift-content {
     flex-grow: 1;

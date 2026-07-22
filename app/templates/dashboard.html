@@ -138,9 +138,9 @@
                         <div class="task-name text-muted">{{ s.task.task_name }}</div>
                         <div>
                             {% if s.shift == 'morning' %}
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">Sáng</span>
+                            <span class="badge task-morning rounded-pill px-3 py-2 fw-medium">Sáng</span>
                             {% else %}
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">Chiều</span>
+                            <span class="badge task-afternoon rounded-pill px-3 py-2 fw-medium">Chiều</span>
                             {% endif %}
                         </div>
                     </li>
@@ -218,14 +218,16 @@
                                     <!-- Morning Shift -->
                                     <div class="shift-row shift-morning">
                                         <div class="shift-label flex-column bg-light-subtle">
-                                            <span class="fw-bold text-primary" style="font-size:0.7rem">Sáng</span>
+                                            <span class="fw-bold" style="font-size:0.7rem">Sáng</span>
                                             <span style="font-size:0.6rem">07:30-11:30</span>
                                         </div>
-                                        <div class="shift-content {% if day_data.morning %}bg-primary-subtle{% endif %}">
+                                        <div class="shift-content">
                                             {% if day_data.morning %}
-                                            <span class="text-primary small fw-medium text-center px-1 w-100 d-block text-truncate" title="{{ day_data.morning.task.task_name }}">
+                                            <span class="task-morning w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="{{ day_data.morning.task.task_name }}">
                                                 {{ day_data.morning.task.task_name }}
                                             </span>
+                                            {% else %}
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -233,14 +235,16 @@
                                     <!-- Afternoon Shift -->
                                     <div class="shift-row shift-afternoon">
                                         <div class="shift-label flex-column bg-light-subtle">
-                                            <span class="fw-bold text-success" style="font-size:0.7rem">Chiều</span>
+                                            <span class="fw-bold" style="font-size:0.7rem">Chiều</span>
                                             <span style="font-size:0.6rem">13:00-17:00</span>
                                         </div>
-                                        <div class="shift-content {% if day_data.afternoon %}bg-success-subtle{% endif %}">
+                                        <div class="shift-content">
                                             {% if day_data.afternoon %}
-                                            <span class="text-success small fw-medium text-center px-1 w-100 d-block text-truncate" title="{{ day_data.afternoon.task.task_name }}">
+                                            <span class="task-afternoon w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem" title="{{ day_data.afternoon.task.task_name }}">
                                                 {{ day_data.afternoon.task.task_name }}
                                             </span>
+                                            {% else %}
+                                            <span class="task-empty w-100 d-block text-truncate text-center fw-medium" style="font-size: 0.75rem">Dự phòng</span>
                                             {% endif %}
                                         </div>
                                     </div>
