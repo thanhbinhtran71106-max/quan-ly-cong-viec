@@ -4,6 +4,8 @@ echo     HE THONG QUAN LY PHAN CONG CONG VIEC NHAN VIEN
 echo ===================================================
 echo.
 echo Dang kiem tra moi truong...
+set PYTHONHOME=
+set PYTHONPATH=
 
 :: Neu chua co venv (do tai tu GitHub ve hoac copy sang may khac)
 if not exist "venv\Scripts\activate" (
@@ -13,7 +15,7 @@ if not exist "venv\Scripts\activate" (
     python -m venv venv
     call .\venv\Scripts\activate
     echo [!] Dang tai cac thu vien can thiet...
-    pip install -r requirements.txt
+    pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
     echo [OK] Cai dat hoan tat!
 )
 
