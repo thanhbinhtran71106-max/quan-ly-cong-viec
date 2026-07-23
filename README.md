@@ -1,29 +1,32 @@
 # Employee Task Scheduler
 
-Hệ thống quản lý và phân công công việc cho nhân viên theo tuần.
+Phần mềm Web giúp trưởng bộ phận phân công công việc cho nhân viên theo tuần, được phát triển với quy trình Agile Scrum (Sprint 1).
 
-## Công nghệ sử dụng
-- Python 3.10
-- Flask 3.0.3
-- SQLite & SQLAlchemy ORM
-- HTML5, Bootstrap 5 (Giao diện)
+## Yêu cầu môi trường
+- Python 3.10 trở lên
+- Trình duyệt web (Chrome/Edge/Firefox)
 
-## Cách cài đặt và chạy
-1. Clone dự án về máy:
+## Hướng dẫn cài đặt và chạy
+
+1. Cài đặt các thư viện cần thiết:
    ```bash
-   git clone <link-github-cua-ban>
-   cd employee_scheduler
-   ```
-2. Tạo môi trường ảo và cài đặt thư viện:
-   ```bash
-   python -m venv venv
-   # Kích hoạt venv (Windows):
-   .\venv\Scripts\activate
-   # Cài đặt requirements
    pip install -r requirements.txt
    ```
-3. Chạy ứng dụng:
+
+2. Khởi tạo Database và chạy ứng dụng:
    ```bash
-   python run.py
+   python app.py
    ```
-   Ứng dụng sẽ chạy tại `http://127.0.0.1:5000/`. Lần đầu chạy sẽ tự động tạo CSDL `instance/scheduler.db` và dữ liệu mẫu.
+   > File `database.db` sẽ tự động được tạo trong thư mục `instance/`.
+
+3. Mở trình duyệt và truy cập:
+   [http://localhost:5000](http://localhost:5000)
+
+## Chức năng (Sprint 1)
+- [x] Thiết lập cấu trúc dự án Flask
+- [x] Thiết kế Database (Employee, Task, Schedule)
+- [x] Giao diện Dashboard cơ bản với Sidebar & Header
+- [x] Kết nối SQLite bằng SQLAlchemy
+
+## Thông tin nhóm
+(Ghi tên các thành viên vào đây)
