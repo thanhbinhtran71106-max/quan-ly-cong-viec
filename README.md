@@ -3,9 +3,9 @@
 Phần mềm Web giúp trưởng bộ phận phân công công việc cho nhân viên theo tuần, được phát triển với quy trình Agile Scrum.
 
 ## Thông tin nhóm
-- **Thành viên 1:** (Tên bạn) - Vai trò: (Trưởng nhóm / Coder)
-- **Thành viên 2:** (Tên bạn 2) - Vai trò: (Coder / Tester)
-- **Thành viên 3:** (Tên bạn 3) - Vai trò: (Coder / UI/UX)
+- **Thành viên 1:**Trần Thanh Bình - Vai trò: (Trưởng nhóm / Coder)
+- **-Thành viên 2:** Nguyễn Ngọc Minh Thiện Vai trò: (Coder / Tester)
+- **Thành viên 3:** Nguyễn Xuân Thành - Vai trò: (Coder / UI/UX)
 
 ## Yêu cầu môi trường
 - Python 3.10 trở lên
