@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Quản Lý Nhân Viên</h3>
+        <p class="text-secondary mb-0" style="font-size: 0.9rem;">Danh sách nhân sự và thông tin chi tiết</p>
+    </div>
+    <button class="btn btn-primary-gradient" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+        <i class="fa-solid fa-user-plus me-1"></i> Thêm Nhân Viên Mới
+    </button>
+</div>
+
+<!-- Flash Alerts -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show border-0" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<!-- Search & Filter Card -->
+<div class="card-panel py-3 mb-4">
+    <form method="GET" action="{{ url_for('employee.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" class="search-bar-input w-100" placeholder="Tìm theo tên, mã NV, bộ phận..." value="{{ search_query }}">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-info w-100 rounded-pill"><i class="fa-solid fa-filter me-1"></i> Lọc</button>
+        </div>
+    </form>
+</div>
+
+<!-- Employee Table Panel -->
+<div class="card-panel">
+    <div class="table-responsive">
+        <table class="table table-dark-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Mã NV</th>
+                    <th>Họ và Tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Bộ phận</th>
+                    <th>Chức vụ</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if employees %}
+                    {% for emp in employees %}
+                    <tr>
+                        <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">{{ emp.code }}</span></td>
+                        <td class="fw-bold text-light">{{ emp.fullname }}</td>
+                        <td class="text-secondary">{{ emp.email }}</td>
+                        <td class="text-secondary">{{ emp.phone }}</td>
+                        <td><span class="badge bg-secondary-subtle text-light">{{ emp.department }}</span></td>
+                        <td><span class="badge bg-info-subtle text-info">{{ emp.position }}</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-success me-1" data-bs-toggle="modal" data-bs-target="#personalModal{{ emp.id }}" title="Cá nhân & Lương">
+                                <i class="fa-solid fa-money-check-dollar"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#editModal{{ emp.id }}" title="Sửa">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <a href="{{ url_for('employee.delete', id=emp.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên này?');">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Modal -->
+                    <div class="modal fade" id="editModal{{ emp.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content modal-content-dark">
+                                <div class="modal-header modal-header-dark">
+                                    <h5 class="modal-title">Sửa thông tin nhân viên: {{ emp.code }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('employee.edit', id=emp.id) }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Họ và tên</label>
+                                            <input type="text" name="fullname" class="form-control form-control-dark" value="{{ emp.fullname }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Email</label>
+                                            <input type="email" name="email" class="form-control form-control-dark" value="{{ emp.email }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Số điện thoại</label>
+                                            <input type="text" name="phone" class="form-control form-control-dark" value="{{ emp.phone }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Bộ phận</label>
+                                            <input type="text" name="department" class="form-control form-control-dark" value="{{ emp.department }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Chức vụ</label>
+                                            <input type="text" name="position" class="form-control form-control-dark" value="{{ emp.position }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Lương Cơ Bản / Giờ (VNĐ)</label>
+                                            <input type="number" name="base_salary_per_hour" class="form-control form-control-dark" value="{{ emp.base_salary_per_hour }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer modal-footer-dark">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-primary-gradient">Cập nhật</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal & Salary Modal -->
+                    <div class="modal fade" id="personalModal{{ emp.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content modal-content-dark">
+                                <div class="modal-header modal-header-dark">
+                                    <h5 class="modal-title"><i class="fa-solid fa-user-tie text-success me-2"></i> Hồ sơ Cá nhân: {{ emp.fullname }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <h6 class="text-info border-bottom border-secondary pb-2 mb-3">1. Thống Kê Thu Nhập</h6>
+                                    {% set total_normal_hours = namespace(value=0) %}
+                                    {% set total_overtime_hours = namespace(value=0) %}
+                                    {% for s in emp.schedules %}
+                                        {% if s.is_overtime %}
+                                            {% set total_overtime_hours.value = total_overtime_hours.value + s.task.duration %}
+                                        {% else %}
+                                            {% set total_normal_hours.value = total_normal_hours.value + s.task.duration %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <div class="row text-center mb-4">
+                                        <div class="col-4">
+                                            <div class="p-3 bg-secondary-subtle rounded border border-secondary-subtle">
+                                                <small class="text-secondary d-block">Giờ Hành Chính</small>
+                                                <strong class="text-light fs-5">{{ total_normal_hours.value }}h</strong>
+                                                <div class="text-success small">x {{ "{:,}".format(emp.base_salary_per_hour) }}đ</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="p-3 bg-danger-subtle rounded border border-danger-subtle">
+                                                <small class="text-danger d-block">Giờ Tăng Ca</small>
+                                                <strong class="text-danger fs-5">{{ total_overtime_hours.value }}h</strong>
+                                                <div class="text-danger small">x {{ "{:,}".format(emp.base_salary_per_hour * 2) }}đ</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="p-3 bg-info-subtle rounded border border-info-subtle">
+                                                <small class="text-info d-block">Tổng Lương Dự Kiến</small>
+                                                <strong class="text-info fs-5">{{ "{:,}".format( (total_normal_hours.value * emp.base_salary_per_hour) + (total_overtime_hours.value * emp.base_salary_per_hour * 2) ) }} VNĐ</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="text-info border-bottom border-secondary pb-2 mb-3">2. Đề Xuất Thăng Tiến</h6>
+                                    <form method="POST" action="{{ url_for('employee.propose', id=emp.id) }}">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Nội dung đề xuất (Gửi Ban Giám Đốc)</label>
+                                            <textarea name="promotion_proposal" class="form-control form-control-dark" rows="3" placeholder="Ghi rõ lý do, thành tích đóng góp...">{{ emp.promotion_proposal }}</textarea>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Lưu Đề Xuất</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer modal-footer-dark">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-secondary">Chưa có dữ liệu nhân viên nào. Hãy bấm "Thêm Nhân Viên Mới"!</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content modal-content-dark">
+            <div class="modal-header modal-header-dark">
+                <h5 class="modal-title"><i class="fa-solid fa-user-plus text-primary me-2"></i> Thêm Nhân Viên Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('employee.add') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Mã Nhân Viên</label>
+                        <input type="text" name="code" class="form-control form-control-dark" placeholder="VD: NV001" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Họ và tên</label>
+                        <input type="text" name="fullname" class="form-control form-control-dark" placeholder="Nhập tên nhân viên" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Email</label>
+                        <input type="email" name="email" class="form-control form-control-dark" placeholder="email@domain.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Số điện thoại</label>
+                        <input type="text" name="phone" class="form-control form-control-dark" placeholder="0901234567" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Bộ phận</label>
+                        <select name="department" class="form-select form-select-dark" required>
+                            <option value="Kỹ thuật">Kỹ thuật</option>
+                            <option value="Kinh doanh">Kinh doanh</option>
+                            <option value="Kế toán">Kế toán</option>
+                            <option value="Hành chính">Hành chính</option>
+                            <option value="IT Support">IT Support</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Chức vụ</label>
+                        <input type="text" name="position" class="form-control form-control-dark" placeholder="VD: Quản trị mạng / Chuyên viên" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Lương Cơ Bản / Giờ (VNĐ)</label>
+                        <input type="number" name="base_salary_per_hour" class="form-control form-control-dark" value="50000" required>
+                    </div>
+                </div>
+                <div class="modal-footer modal-footer-dark">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary-gradient">Thêm Mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

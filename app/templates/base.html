@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Task Scheduler | Dark Edition</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom Dark CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-dark text-light">
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar Navigation -->
+            <aside class="col-lg-2 col-md-3 sidebar d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Brand Logo -->
+                    <div class="brand-header">
+                        <div class="brand-logo">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="brand-title">TASK SCHEDULER</div>
+                            <small class="text-secondary" style="font-size: 0.7rem;">Enterprise Task System</small>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Items -->
+                    <div class="nav-section-title">Hệ Thống</div>
+                    <nav class="nav flex-column">
+                        <a class="nav-link {% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </nav>
+
+                    <div class="nav-section-title">Chức Năng Chính</div>
+                    <nav class="nav flex-column">
+                        <a class="nav-link {% if 'employee' in request.path %}active{% endif %}" href="{{ url_for('employee.index') }}">
+                            <i class="fa-solid fa-users-gear"></i>
+                            <span>Quản lý Nhân viên</span>
+                        </a>
+                        <a class="nav-link {% if 'task' in request.path %}active{% endif %}" href="{{ url_for('task.index') }}">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>Quản lý Công việc</span>
+                        </a>
+                        <a class="nav-link {% if request.path == url_for('schedule.index') %}active{% endif %}" href="{{ url_for('schedule.index') }}">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <span>Phân công Lịch làm</span>
+                        </a>
+                        <a class="nav-link {% if request.path == url_for('schedule.taskboard') %}active{% endif %}" href="{{ url_for('schedule.taskboard') }}">
+                            <i class="fa-solid fa-kanban"></i>
+                            <span>Bảng Công Việc</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Admin Profile Widget (Clickable to change admin details) -->
+                {% set admin_name = session.get('admin_name', 'Quản trị viên') %}
+                {% set admin_role = session.get('admin_role', 'System Administrator') %}
+                <div class="user-profile-widget" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#adminProfileModal" title="Nhấn để thay đổi thông tin Quản trị viên">
+                    <div class="avatar-circle">{{ admin_name[0] if admin_name else 'A' }}</div>
+                    <div class="overflow-hidden">
+                        <div class="text-white fw-semibold text-truncate" style="font-size: 0.88rem;">{{ admin_name }}</div>
+                        <small class="text-secondary" style="font-size: 0.72rem;">{{ admin_role }} <i class="fa-solid fa-pen ms-1" style="font-size: 0.6rem;"></i></small>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Workspace -->
+            <main class="col-lg-10 col-md-9 d-flex flex-column min-vh-100">
+                <!-- Top Navbar -->
+                <header class="top-navbar d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="search-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" class="search-bar-input" placeholder="Tìm kiếm hệ thống...">
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Clock & Date widget -->
+                        <div class="d-none d-md-flex align-items-center gap-3 text-secondary me-2" style="font-size: 0.85rem;">
+                            <div>
+                                <i class="fa-regular fa-clock text-info me-1"></i>
+                                <span id="live-clock" class="fw-semibold text-light">09:58:00 AM</span>
+                            </div>
+                        </div>
+
+                        <!-- Change Admin Profile Shortcut -->
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#adminProfileModal">
+                            <i class="fa-solid fa-user-gear me-1"></i> {{ admin_name }}
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Dynamic Page Content -->
+                <div class="flex-grow-1 p-4" style="background-color: var(--bg-main);">
+                    {% block content %}{% endblock %}
+                </div>
+
+                <!-- Footer -->
+                <footer class="border-top px-4 py-3 text-center text-secondary" style="font-size: 0.8rem; background-color: var(--card-bg); border-color: var(--border-color) !important;">
+                    <strong>Employee Task Scheduler</strong> &copy; 2026 - Enterprise Task System
+                </footer>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Change Admin Profile -->
+    <div class="modal fade" id="adminProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content modal-content-dark">
+                <div class="modal-header modal-header-dark">
+                    <h5 class="modal-title"><i class="fa-solid fa-user-gear text-primary me-2"></i> Thay Đổi Thông Tin Quản Trị Viên</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Tên Quản Trị Viên</label>
+                            <input type="text" name="admin_name" class="form-control form-control-dark" value="{{ admin_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Chức Danh / Vai Trò</label>
+                            <input type="text" name="admin_role" class="form-control form-control-dark" value="{{ admin_role }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Email Quản Trị</label>
+                            <input type="email" name="admin_email" class="form-control form-control-dark" value="{{ session.get('admin_email', 'admin@system.com') }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer modal-footer-dark">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary-gradient">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function refreshClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const clockElem = document.getElementById('live-clock');
+            if(clockElem) clockElem.textContent = timeStr;
+        }
+        setInterval(refreshClock, 1000);
+        refreshClock();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+< ! - -   I m p r o v e d   b y   M i n h   T h i e n   - - >  
+ 
