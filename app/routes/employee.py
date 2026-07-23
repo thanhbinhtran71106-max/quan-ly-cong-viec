@@ -25,6 +25,7 @@ def add():
     phone = request.form.get('phone')
     department = request.form.get('department')
     position = request.form.get('position')
+    base_salary_per_hour = request.form.get('base_salary_per_hour', type=int, default=50000)
 
     if not code or not fullname:
         flash('Vui lòng nhập đầy đủ thông tin!', 'danger')
@@ -42,7 +43,8 @@ def add():
         email=email,
         phone=phone,
         department=department,
-        position=position
+        position=position,
+        base_salary_per_hour=base_salary_per_hour
     )
     db.session.add(new_emp)
     db.session.commit()
@@ -57,6 +59,7 @@ def edit(id):
     emp.phone = request.form.get('phone')
     emp.department = request.form.get('department')
     emp.position = request.form.get('position')
+    emp.base_salary_per_hour = request.form.get('base_salary_per_hour', type=int, default=50000)
 
     db.session.commit()
     flash('Cập nhật thông tin nhân viên thành công!', 'success')
@@ -68,4 +71,14 @@ def delete(id):
     db.session.delete(emp)
     db.session.commit()
     flash('Đã xóa nhân viên khỏi hệ thống!', 'warning')
+    return redirect(url_for('employee.index'))
+
+@bp.route('/propose/<int:id>', methods=['POST'])
+def propose(id):
+    emp = Employee.query.get_or_404(id)
+    proposal = request.form.get('promotion_proposal')
+    
+    emp.promotion_proposal = proposal
+    db.session.commit()
+    flash(f'Đã lưu đề xuất thăng tiến cho nhân viên {emp.fullname}!', 'success')
     return redirect(url_for('employee.index'))

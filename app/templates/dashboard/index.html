@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- Header Greeting -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -129,6 +131,7 @@
                         <select name="shift" class="form-select form-select-dark" required>
                             <option value="Sáng">Ca Sáng (07:30 - 11:30)</option>
                             <option value="Chiều">Ca Chiều (13:00 - 17:00)</option>
+                            <option value="Tối">Ca Tối (18:00 - 01:00)</option>
                         </select>
                     </div>
                 </div>
@@ -240,5 +243,74 @@
             </div>
         </div>
     </div>
+    <!-- Thêm Biểu Đồ Tăng Ca -->
+    <div class="col-12 mt-4">
+        <div class="card-panel">
+            <div class="panel-header">
+                <h5 class="panel-title">
+                    <i class="fa-solid fa-chart-column text-danger"></i> Biểu Đồ Tăng Ca & Giờ Hành Chính
+                </h5>
+            </div>
+            <div style="height: 400px; width: 100%;">
+                <canvas id="overtimeChart"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    // Khởi tạo dữ liệu từ backend
+    const chartData = {{ chart_data | safe }};
+
+    const ctx = document.getElementById('overtimeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: 'Giờ Hành Chính',
+                    data: chartData.normal_hours,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Giờ Tăng Ca (x2 Lương)',
+                    data: chartData.overtime_hours,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: true,
+                    title: {
+                        display: true,
+                        text: 'Số giờ (h)',
+                        color: '#a0a0a0'
+                    },
+                    ticks: { color: '#a0a0a0' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                },
+                x: {
+                    stacked: true,
+                    ticks: { color: '#a0a0a0' },
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#ffffff' }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

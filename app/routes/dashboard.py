@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request
+import json
 from datetime import datetime, date
 from app import db
 from app.models.employee import Employee
@@ -66,10 +67,35 @@ def index():
         {'name': 'Thứ 7', 'date': '24/05', 'is_today': False},
     ]
 
+    # Tính toán Chart Data
+    chart_labels = []
+    chart_normal = []
+    chart_overtime = []
+
+    for emp in employees:
+        chart_labels.append(emp.fullname)
+        normal = 0
+        overtime = 0
+        for s in emp.schedules:
+            if s.task:
+                if s.is_overtime:
+                    overtime += s.task.duration
+                else:
+                    normal += s.task.duration
+        chart_normal.append(normal)
+        chart_overtime.append(overtime)
+
+    chart_data = json.dumps({
+        'labels': chart_labels,
+        'normal_hours': chart_normal,
+        'overtime_hours': chart_overtime
+    })
+
     return render_template(
         'dashboard/index.html',
         stats=stats,
         employees=employees,
         tasks=tasks,
-        days=days
+        days=days,
+        chart_data=chart_data
     )

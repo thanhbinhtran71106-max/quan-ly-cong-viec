@@ -10,6 +10,8 @@ class Employee(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     department = db.Column(db.String(50), nullable=False)
     position = db.Column(db.String(50), nullable=False)
+    base_salary_per_hour = db.Column(db.Integer, nullable=False, default=50000) # VD: 50.000 VNĐ/giờ
+    promotion_proposal = db.Column(db.Text, nullable=True) # Đề xuất thăng tiến
 
     schedules = db.relationship('Schedule', backref='employee', lazy=True, cascade="all, delete-orphan")
 
@@ -21,5 +23,7 @@ class Employee(db.Model):
             'email': self.email,
             'phone': self.phone,
             'department': self.department,
-            'position': self.position
+            'position': self.position,
+            'base_salary_per_hour': self.base_salary_per_hour,
+            'promotion_proposal': self.promotion_proposal or ''
         }

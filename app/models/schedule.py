@@ -10,6 +10,7 @@ class Schedule(db.Model):
     date = db.Column(db.Date, nullable=False, default=date.today)
     shift = db.Column(db.String(20), nullable=False) # 'Sáng', 'Chiều'
     status = db.Column(db.String(20), nullable=False, default='Todo') # 'Todo', 'In Progress', 'Done'
+    is_overtime = db.Column(db.Boolean, nullable=False, default=False)
 
     def to_dict(self):
         return {
@@ -18,5 +19,6 @@ class Schedule(db.Model):
             'task_id': self.task_id,
             'date': self.date.strftime('%Y-%m-%d'),
             'shift': self.shift,
-            'status': self.status
+            'status': self.status,
+            'is_overtime': self.is_overtime
         }

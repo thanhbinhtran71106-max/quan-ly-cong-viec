@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import csv
 import io
 from app import db
@@ -9,34 +9,35 @@ from app.models.schedule import Schedule
 
 bp = Blueprint('schedule', __name__)
 
-def check_workload_and_expertise(employee_id, task_id, sched_date, shift, exclude_sched_id=None):
+def get_date_from_weekday(weekday_str):
+    mapping = {'Thứ 2': 0, 'Thứ 3': 1, 'Thứ 4': 2, 'Thứ 5': 3, 'Thứ 6': 4, 'Thứ 7': 5, 'Chủ Nhật': 6}
+    target_weekday = mapping.get(weekday_str, 0)
+    today = date.today()
+    current_weekday = today.weekday()
+    diff = target_weekday - current_weekday
+    return today + timedelta(days=diff)
+
+def check_workload_and_expertise(employee_id, task_id, sched_date, is_overtime, exclude_sched_id=None):
     emp = Employee.query.get(employee_id)
     task = Task.query.get(task_id)
     
     # 1. Check Expertise
     if task.required_expertise and task.required_expertise != emp.department:
-        flash(f'CẢNH BÁO: Chuyên môn yêu cầu của công việc ({task.required_expertise}) không khớp với phòng ban của nhân viên ({emp.department}).', 'warning')
+        flash(f'CẢNH BÁO: Chuyên môn ({task.required_expertise}) không khớp với phòng ban của nhân viên.', 'warning')
 
-    # 2. Check Workload (>= 2 tasks in the same shift)
+    # 2. Check 8-hour limit per day
     workload_query = Schedule.query.filter_by(
         employee_id=employee_id,
-        date=sched_date,
-        shift=shift
+        date=sched_date
     )
     if exclude_sched_id:
         workload_query = workload_query.filter(Schedule.id != exclude_sched_id)
         
-    current_tasks_count = workload_query.count()
+    existing_schedules = workload_query.all()
+    total_hours = sum([s.task.duration for s in existing_schedules if s.task])
     
-    if current_tasks_count >= 2:
-        # Suggest others
-        suggested = Employee.query.filter(
-            Employee.id != employee_id,
-            Employee.department == (task.required_expertise or emp.department)
-        ).all()
-        suggested_names = ", ".join([e.fullname for e in suggested])
-        suggest_msg = f" Gợi ý nhân viên khác: {suggested_names}" if suggested else " Không có nhân viên cùng chuyên môn khác."
-        return f'LỖI: Nhân viên {emp.fullname} đã bị quá tải (>= 2 công việc) trong ca {shift} ngày {sched_date.strftime("%d/%m/%Y")}.{suggest_msg}'
+    if total_hours + task.duration > 8 and not is_overtime:
+        return f'LỖI: Nhân viên {emp.fullname} sẽ làm việc {total_hours + task.duration} tiếng trong ngày {sched_date.strftime("%d/%m/%Y")} (Vượt quá 8 tiếng). Hãy check chọn [Tăng ca] để cho phép phân công.'
         
     return None
 
@@ -69,16 +70,17 @@ def index():
 def add():
     employee_id = request.form.get('employee_id', type=int)
     task_id = request.form.get('task_id', type=int)
-    date_str = request.form.get('date')
+    day_of_week = request.form.get('day_of_week')
     shift = request.form.get('shift')
+    is_overtime = True if request.form.get('is_overtime') else False
 
-    if not employee_id or not task_id or not date_str or not shift:
+    if not employee_id or not task_id or not day_of_week or not shift:
         flash('Vui lòng điền đầy đủ các thông tin phân công!', 'danger')
         return redirect(url_for('schedule.index'))
 
-    sched_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    sched_date = get_date_from_weekday(day_of_week)
 
-    error_msg = check_workload_and_expertise(employee_id, task_id, sched_date, shift)
+    error_msg = check_workload_and_expertise(employee_id, task_id, sched_date, is_overtime)
     if error_msg:
         flash(error_msg, 'danger')
         return redirect(url_for('schedule.index'))
@@ -87,7 +89,8 @@ def add():
         employee_id=employee_id,
         task_id=task_id,
         date=sched_date,
-        shift=shift
+        shift=shift,
+        is_overtime=is_overtime
     )
     db.session.add(new_sched)
     db.session.commit()
@@ -100,16 +103,17 @@ def edit(id):
     
     employee_id = request.form.get('employee_id', type=int)
     task_id = request.form.get('task_id', type=int)
-    date_str = request.form.get('date')
+    day_of_week = request.form.get('day_of_week')
     shift = request.form.get('shift')
+    is_overtime = True if request.form.get('is_overtime') else False
 
-    if not employee_id or not task_id or not date_str or not shift:
+    if not employee_id or not task_id or not day_of_week or not shift:
         flash('Vui lòng điền đầy đủ thông tin!', 'danger')
         return redirect(url_for('schedule.index'))
         
-    sched_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    sched_date = get_date_from_weekday(day_of_week)
 
-    error_msg = check_workload_and_expertise(employee_id, task_id, sched_date, shift, exclude_sched_id=id)
+    error_msg = check_workload_and_expertise(employee_id, task_id, sched_date, is_overtime, exclude_sched_id=id)
     if error_msg:
         flash(error_msg, 'danger')
         return redirect(url_for('schedule.index'))
@@ -118,6 +122,7 @@ def edit(id):
     sched.task_id = task_id
     sched.date = sched_date
     sched.shift = shift
+    sched.is_overtime = is_overtime
 
     db.session.commit()
     flash('Cập nhật phân công thành công!', 'success')
@@ -162,20 +167,27 @@ def export_csv():
     output = io.StringIO()
     output.write('\ufeff') 
     writer = csv.writer(output)
-    writer.writerow(['Mã Lịch', 'Ngày Phân Công', 'Ca Làm Việc', 'Trạng Thái', 'Mã NV', 'Tên Nhân Viên', 'Bộ Phận', 'Mã CV', 'Tên Công Việc', 'Độ Ưu Tiên'])
+    writer.writerow(['Mã Lịch', 'Ngày Phân Công', 'Ca Làm Việc', 'Tăng Ca', 'Trạng Thái', 'Mã NV', 'Tên Nhân Viên', 'Phòng Ban', 'Mã CV', 'Tên Công Việc', 'Thời gian (Giờ)', 'Lương Thực Nhận (VNĐ)'])
     for s in schedules:
+        salary = s.task.duration * s.employee.base_salary_per_hour
+        if s.is_overtime:
+            salary *= 2
+            
         writer.writerow([
             f'SCH-{s.id}',
             s.date.strftime('%d/%m/%Y'),
             s.shift,
+            'Có' if s.is_overtime else 'Không',
             s.status,
             s.employee.code,
             s.employee.fullname,
             s.employee.department,
             s.task.code,
             s.task.task_name,
-            s.task.priority
+            s.task.duration,
+            salary
         ])
     response = Response(output.getvalue(), mimetype='text/csv')
-    response.headers['Content-Disposition'] = 'attachment; filename=Lich_Phan_Cong_Worksheet.csv'
+    # Change filename to .csv but clarify it's Excel compatible
+    response.headers['Content-Disposition'] = 'attachment; filename=Bao_Cao_Phan_Cong.csv'
     return response
