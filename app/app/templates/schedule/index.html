@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Phân Công & Quản Lý Lịch Làm Việc</h3>
+        <p class="text-secondary mb-0" style="font-size: 0.9rem;">Hệ thống tự động kiểm tra trùng ca và trùng lịch của nhân viên</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('schedule.export_csv') }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-file-excel me-1"></i> Xuất Lịch (CSV / Excel)
+        </a>
+        <button class="btn btn-primary-gradient btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+            <i class="fa-solid fa-calendar-plus me-1"></i> Phân Công Mới
+        </button>
+    </div>
+</div>
+
+<!-- Flash Alerts -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show border-0 shadow-sm" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<!-- Filter Bar -->
+<div class="card-panel py-3 mb-4">
+    <form method="GET" action="{{ url_for('schedule.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <select name="employee_id" class="form-select form-select-dark">
+                <option value="">-- Tất cả nhân viên --</option>
+                {% for emp in employees %}
+                <option value="{{ emp.id }}" {% if selected_emp == emp.id %}selected{% endif %}>{{ emp.code }} - {{ emp.fullname }} ({{ emp.department }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select name="shift" class="form-select form-select-dark">
+                <option value="">-- Tất cả ca làm --</option>
+                <option value="Sáng" {% if selected_shift == 'Sáng' %}selected{% endif %}>Ca Sáng (07:30 - 11:30)</option>
+                <option value="Chiều" {% if selected_shift == 'Chiều' %}selected{% endif %}>Ca Chiều (13:00 - 17:00)</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-outline-info w-100 rounded-pill"><i class="fa-solid fa-filter me-1"></i> Lọc Lịch</button>
+        </div>
+    </form>
+</div>
+
+<!-- Schedule Table Panel -->
+<div class="card-panel">
+    <div class="panel-header">
+        <h5 class="panel-title"><i class="fa-solid fa-calendar-week text-primary"></i> Danh Sách Lịch Đã Phân Công</h5>
+        <span class="badge bg-success-subtle text-success border border-success-subtle">Thuật toán kiểm tra trùng ca: Hoạt động</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-dark-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Mã Lịch</th>
+                    <th>Ngày Phân Công</th>
+                    <th>Ca Làm Việc</th>
+                    <th>Nhân Viên Được Giao</th>
+                    <th>Công Việc Được Giao</th>
+                    <th>Ưu Tiên</th>
+                    <th class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if schedules %}
+                    {% for sched in schedules %}
+                    <tr>
+                        <td><span class="badge bg-secondary-subtle text-light">SCH-{{ sched.id }}</span></td>
+                        <td class="fw-bold text-info">{{ sched.date.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if sched.shift == 'Sáng' %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="fa-solid fa-sun me-1"></i> Ca Sáng (07:30 - 11:30)</span>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="fa-solid fa-moon me-1"></i> Ca Chiều (13:00 - 17:00)</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-light">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-circle" style="width: 28px; height: 28px; font-size: 0.72rem;">{{ sched.employee.fullname[0] }}</div>
+                                <span>{{ sched.employee.fullname }}</span>
+                                <small class="text-secondary">({{ sched.employee.department }})</small>
+                            </div>
+                        </td>
+                        <td class="text-light">{{ sched.task.task_name }}</td>
+                        <td>
+                            {% if sched.task.priority == 'Cao' %}
+                            <span class="priority-pill priority-high">Cao</span>
+                            {% elif sched.task.priority == 'Trung bình' %}
+                            <span class="priority-pill priority-medium">Trung bình</span>
+                            {% else %}
+                            <span class="priority-pill priority-low">Thường</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#editScheduleModal{{ sched.id }}">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <a href="{{ url_for('schedule.delete', id=sched.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn hủy lịch phân công này?');">
+                                <i class="fa-solid fa-trash me-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <!-- Edit Schedule Modal -->
+                    <div class="modal fade" id="editScheduleModal{{ sched.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content modal-content-dark">
+                                <div class="modal-header modal-header-dark">
+                                    <h5 class="modal-title">Sửa Lịch Phân Công (SCH-{{ sched.id }})</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('schedule.edit', id=sched.id) }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Chọn Nhân Viên</label>
+                                            <select name="employee_id" class="form-select form-select-dark" required>
+                                                {% for emp in employees %}
+                                                <option value="{{ emp.id }}" {% if emp.id == sched.employee_id %}selected{% endif %}>{{ emp.code }} - {{ emp.fullname }} ({{ emp.department }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary">Chọn Công Việc</label>
+                                            <select name="task_id" class="form-select form-select-dark" required>
+                                                {% for t in tasks %}
+                                                <option value="{{ t.id }}" {% if t.id == sched.task_id %}selected{% endif %}>{{ t.code }} - {{ t.task_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <label class="form-label text-secondary">Ngày Làm Việc</label>
+                                                <input type="date" name="date" class="form-control form-control-dark" value="{{ sched.date.strftime('%Y-%m-%d') }}" required>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label text-secondary">Ca Làm Việc</label>
+                                                <select name="shift" class="form-select form-select-dark" required>
+                                                    <option value="Sáng" {% if sched.shift == 'Sáng' %}selected{% endif %}>Ca Sáng</option>
+                                                    <option value="Chiều" {% if sched.shift == 'Chiều' %}selected{% endif %}>Ca Chiều</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer modal-footer-dark">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-primary-gradient">Cập Nhật</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-secondary">Chưa có lịch phân công nào thỏa mãn điều kiện lọc.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content modal-content-dark">
+            <div class="modal-header modal-header-dark">
+                <h5 class="modal-title"><i class="fa-solid fa-calendar-plus text-primary me-2"></i> Phân Công Công Việc Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('schedule.add') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Chọn Nhân Viên</label>
+                        <select name="employee_id" class="form-select form-select-dark" required>
+                            <option value="">-- Chọn nhân viên thực hiện --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.code }} - {{ emp.fullname }} ({{ emp.department }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Chọn Công Việc</label>
+                        <select name="task_id" class="form-select form-select-dark" required>
+                            <option value="">-- Chọn công việc --</option>
+                            {% for t in tasks %}
+                            <option value="{{ t.id }}">{{ t.code }} - {{ t.task_name }} [Ưu tiên: {{ t.priority }}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary">Ngày Làm Việc</label>
+                            <input type="date" name="date" class="form-control form-control-dark" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary">Ca Làm Việc</label>
+                            <select name="shift" class="form-select form-select-dark" required>
+                                <option value="Sáng">Ca Sáng (07:30 - 11:30)</option>
+                                <option value="Chiều">Ca Chiều (13:00 - 17:00)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer modal-footer-dark">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary-gradient">Lưu Lịch Phân Công</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
