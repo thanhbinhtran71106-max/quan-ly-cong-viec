@@ -1,1 +1,1 @@
-from app.routes import *  # noqa
+# Routes module

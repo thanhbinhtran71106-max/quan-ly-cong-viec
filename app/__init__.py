@@ -1,41 +1,44 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_wtf import CSRFProtect
 from config import Config
+import os
 
 db = SQLAlchemy()
 migrate = Migrate()
-csrf = CSRFProtect()
-
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Ensure the instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
     db.init_app(app)
     migrate.init_app(app, db)
-    csrf.init_app(app)
 
-    # Inject timedelta into templates
-    from datetime import timedelta
-    app.jinja_env.globals['timedelta'] = timedelta
+    # Register Blueprints
+    from app.routes.dashboard import bp as dashboard_bp
+    app.register_blueprint(dashboard_bp)
 
-    from app.routes.main import main_bp
-    from app.routes.employees import employees_bp
-    from app.routes.tasks import tasks_bp
-    from app.routes.schedules import schedules_bp
+    from app.routes.employee import bp as employee_bp
+    app.register_blueprint(employee_bp, url_prefix='/employee')
 
-    app.register_blueprint(main_bp)
-    app.register_blueprint(employees_bp, url_prefix='/employees')
-    app.register_blueprint(tasks_bp, url_prefix='/tasks')
-    app.register_blueprint(schedules_bp, url_prefix='/schedules')
+    from app.routes.task import bp as task_bp
+    app.register_blueprint(task_bp, url_prefix='/task')
+    
+    from app.routes.schedule import bp as schedule_bp
+    app.register_blueprint(schedule_bp, url_prefix='/schedule')
 
+    from app.routes.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    # Automatically create database tables if they don't exist
     with app.app_context():
-        from app import models
+        from app.models import employee, task, schedule
         db.create_all()
 
     return app
-
-
-from app import models  # noqa: E402, F401
