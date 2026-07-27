@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1" style="color: var(--text-main);">Lịch Tuần (Weekly Schedule)</h3>
+        <p class="text-secondary mb-0" style="font-size: 0.9rem;">
+            Trực quan ca Sáng & Chiều từ Thứ 2 đến Thứ 7
+        </p>
+    </div>
+    
+    <!-- Filter Bar -->
+    <form method="GET" action="{{ url_for('schedule.weekly') }}" class="d-flex gap-2">
+        <select name="employee_id" class="form-select" style="min-width: 250px; background-color: white;" onchange="this.form.submit()">
+            <option value="">-- Tất cả nhân viên --</option>
+            {% for emp in employees %}
+            <option value="{{ emp.id }}" {% if selected_emp == emp.id %}selected{% endif %}>{{ emp.code }} - {{ emp.fullname }} ({{ emp.department }})</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<!-- Calendar Grid (Dark Mode Style to match mockup) -->
+<div class="weekly-calendar-container p-0 overflow-hidden shadow-sm" style="background-color: #1a202c; border-radius: 4px;">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle text-center mockup-table">
+            <thead>
+                <tr>
+                    <th style="width: 200px; text-align: left; padding-left: 20px;" class="bg-darker text-uppercase text-secondary">Nhân Viên</th>
+                    {% set days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'] %}
+                    {% for i in range(6) %}
+                    <th class="day-header {% if i == 0 %}active-day{% endif %}">
+                        <div class="fw-bold text-uppercase">{{ days[i] }}</div>
+                        <div class="small">{{ week_dates[i] }}</div>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp, days_data in weekly_data.items() %}
+                <tr>
+                    <td class="emp-cell">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle-mockup me-3" style="background-color: {% if loop.index % 3 == 0 %}#3b82f6{% elif loop.index % 2 == 0 %}#0ea5e9{% else %}#06b6d4{% endif %};">
+                                {{ emp.fullname[0] }}
+                            </div>
+                            <div class="text-start">
+                                <div class="fw-bold" style="color: #e2e8f0; font-size: 0.95rem; margin-bottom: 2px;">{{ emp.fullname }}</div>
+                                <div class="text-secondary" style="font-size: 0.85rem;">{{ emp.department }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    
+                    {% for day in range(6) %}
+                    <td class="calendar-cell">
+                        <div class="d-flex gap-2 h-100">
+                            {% set has_task = false %}
+                            
+                            {% if days_data[day]['Sáng'] %}
+                                {% set has_task = true %}
+                                {% for sched in days_data[day]['Sáng'] %}
+                                <div class="task-box box-sang">
+                                    <div class="fw-bold mb-1">SÁNG</div>
+                                    <div class="task-name text-truncate" title="{{ sched.task.task_name }}">{{ sched.task.task_name }}</div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                            
+                            {% if days_data[day]['Chiều'] %}
+                                {% set has_task = true %}
+                                {% for sched in days_data[day]['Chiều'] %}
+                                <div class="task-box box-chieu">
+                                    <div class="fw-bold mb-1">CHIỀU</div>
+                                    <div class="task-name text-truncate" title="{{ sched.task.task_name }}">{{ sched.task.task_name }}</div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                            
+                            {% if not has_task %}
+                            <div class="task-box box-nghi w-100 d-flex align-items-center justify-content-center">
+                                Nghỉ
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+                
+                {% if not weekly_data %}
+                <tr>
+                    <td colspan="7" class="text-center py-5" style="color: #94a3b8;">Không có dữ liệu nhân viên.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+/* Custom mockup styles */
+.mockup-table {
+    border-collapse: collapse;
+    color: #e2e8f0;
+}
+
+.mockup-table th, .mockup-table td {
+    border: 1px solid #334155;
+}
+
+.bg-darker {
+    background-color: #111827 !important;
+}
+
+.day-header {
+    background-color: #111827 !important;
+    padding: 15px 10px !important;
+    color: #64748b;
+}
+
+.day-header.active-day {
+    background-color: #f1f5f9 !important;
+    color: #6366f1;
+}
+
+.emp-cell {
+    background-color: #1f2937;
+    padding: 12px 20px !important;
+    vertical-align: middle;
+}
+
+.avatar-circle-mockup {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.calendar-cell {
+    background-color: #1f2937;
+    padding: 12px !important;
+    vertical-align: middle;
+    width: 14%;
+}
+
+.task-box {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid;
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+}
+
+.box-sang {
+    background-color: rgba(6, 182, 212, 0.05);
+    border-color: #06b6d4;
+    color: #06b6d4;
+}
+
+.box-chieu {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.box-nghi {
+    background-color: transparent;
+    border: 1px dashed #64748b;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.task-box .fw-bold {
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.task-name {
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}
