@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIoT Platform Pro — Enterprise Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.8);
+            --bg-card-hover: rgba(17, 24, 39, 0.95);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --purple: #8b5cf6;
+            --sidebar-w: 280px;
+        }
+
+        body.light-mode {
+            --bg-primary: #f1f5f9;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.85);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.15);
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --accent-light: #3b82f6;
+            --accent-glow: rgba(37, 99, 235, 0.1);
+        }
+        body.light-mode .sidebar { background: #ffffff; }
+        body.light-mode .sidebar::after { opacity: 0.15; }
+        body.light-mode .topbar { background: rgba(255,255,255,0.7); }
+        body.light-mode th { background: rgba(255,255,255,0.95); }
+        body.light-mode .sensor-card { background: rgba(0,0,0,0.03); }
+        body.light-mode .ai-box { background: rgba(0,0,0,0.03); }
+        body.light-mode .ms-box { background: rgba(0,0,0,0.03); }
+        body.light-mode .notif-panel { background: #ffffff; }
+        body.light-mode .modal-box { background: #ffffff; color: var(--text-primary); }
+        body.light-mode .support-form textarea { background: rgba(0,0,0,0.04); color: var(--text-primary); }
+        body.light-mode .form-g input, body.light-mode .form-g select { background: rgba(0,0,0,0.03); }
+        body.light-mode .rule-item { background: rgba(0,0,0,0.03); }
+        body.light-mode .led-off { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #64748b; box-shadow: inset 0 2px 6px rgba(0,0,0,0.1); }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════ LAYOUT ═══════════ */
+        .app { display: flex; height: 100vh; }
+
+        /* ═══════════ SIDEBAR ═══════════ */
+        .sidebar {
+            width: var(--sidebar-w); background: var(--bg-secondary);
+            border-right: 1px solid var(--border); display: flex; flex-direction: column;
+            position: relative; z-index: 10; flex-shrink: 0;
+        }
+        .sidebar::after {
+            content: ''; position: absolute; top: 0; right: 0; width: 1px; height: 100%;
+            background: linear-gradient(180deg, var(--accent) 0%, transparent 50%, var(--cyan) 100%);
+            opacity: 0.3;
+        }
+
+        /* Brand */
+        .brand {
+            padding: 28px 24px 24px; border-bottom: 1px solid var(--border);
+        }
+        .brand-name {
+            font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent-light), var(--cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .brand-tag {
+            font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 2px; margin-top: 4px;
+        }
+        .brand-version {
+            display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 20px;
+            background: var(--accent-glow); color: var(--accent-light);
+            font-size: 0.6rem; font-weight: 700; letter-spacing: 1px;
+        }
+
+        /* Nav */
+        .nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .nav-section { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; padding: 16px 16px 8px; font-weight: 700; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
+            color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;
+            margin-bottom: 2px; position: relative;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+        .nav-item.active {
+            background: var(--accent-glow); color: var(--accent-light);
+        }
+        .nav-item.active::before {
+            content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            width: 3px; height: 24px; border-radius: 0 4px 4px 0;
+            background: var(--accent);
+        }
+        .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+        .nav-badge {
+            margin-left: auto; background: var(--rose); color: white;
+            font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+        }
+
+        /* User Card */
+        .user-card {
+            padding: 16px 20px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.85rem; color: white;
+        }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; }
+        .user-role {
+            font-size: 0.65rem; color: var(--emerald); text-transform: uppercase;
+            letter-spacing: 1px; font-weight: 700;
+        }
+        .user-logout {
+            color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 4px;
+            border-radius: 6px; transition: all 0.2s;
+        }
+        .user-logout:hover { color: var(--rose); background: rgba(244,63,94,0.1); }
+
+        /* ═══════════ MAIN ═══════════ */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Top Bar */
+        .topbar {
+            padding: 16px 32px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(17, 24, 39, 0.5); backdrop-filter: blur(20px);
+            flex-shrink: 0;
+        }
+        .topbar-left h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.5px; }
+        .topbar-left p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .topbar-right { display: flex; gap: 10px; align-items: center; }
+
+        .tb-btn {
+            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary); font-size: 0.8rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tb-btn:hover { border-color: var(--border-hover); color: var(--text-primary); background: rgba(255,255,255,0.03); }
+        .tb-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+        .tb-btn.primary:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+
+        /* Notification */
+        .notif-wrap { position: relative; }
+        .notif-btn {
+            width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            font-size: 1.1rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .notif-btn:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+        .notif-dot {
+            position: absolute; top: -2px; right: -2px; width: 18px; height: 18px;
+            background: var(--rose); border-radius: 50%; font-size: 0.6rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; color: white;
+            border: 2px solid var(--bg-secondary);
+        }
+        .notif-panel {
+            display: none; position: absolute; top: 48px; right: 0; width: 380px;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 999;
+            overflow: hidden;
+        }
+        .notif-panel.show { display: block; animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .notif-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 0.9rem; }
+        .notif-list { max-height: 320px; overflow-y: auto; }
+        .notif-item {
+            padding: 14px 20px; border-bottom: 1px solid var(--border); transition: background 0.15s;
+            cursor: pointer;
+        }
+        .notif-item:hover { background: rgba(255,255,255,0.02); }
+        .notif-item .ni-title { font-size: 0.85rem; font-weight: 600; }
+        .notif-item .ni-msg { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+        .notif-item .ni-time { font-size: 0.65rem; color: var(--text-muted); margin-top: 6px; }
+        .notif-item.danger .ni-title { color: var(--rose); }
+        .notif-item.warning .ni-title { color: var(--amber); }
+
+        /* Content Area */
+        .content { flex: 1; padding: 28px 32px; overflow-y: auto; }
+        .tab-pane { display: none; animation: fadeUp 0.35s ease; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ═══════════ KPI CARDS ═══════════ */
+        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+        .kpi-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+            padding: 20px; transition: all 0.25s ease; position: relative; overflow: hidden;
+        }
+        .kpi-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .kpi-card::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        }
+        .kpi-card:nth-child(1)::after { background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+        .kpi-card:nth-child(2)::after { background: linear-gradient(90deg, var(--emerald), #34d399); }
+        .kpi-card:nth-child(3)::after { background: linear-gradient(90deg, var(--rose), #fb7185); }
+        .kpi-card:nth-child(4)::after { background: linear-gradient(90deg, var(--purple), #a78bfa); }
+        .kpi-card:nth-child(5)::after { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+
+        .kpi-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .kpi-value { font-size: 2rem; font-weight: 800; margin: 8px 0 4px; letter-spacing: -1px; }
+        .kpi-sub { font-size: 0.7rem; color: var(--text-muted); }
+        .kpi-icon { position: absolute; top: 16px; right: 16px; font-size: 1.5rem; opacity: 0.5; }
+
+        /* ═══════════ GRID LAYOUT ═══════════ */
+        .grid-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .grid-2-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 1200px) { .grid-2, .grid-2-eq { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        /* ═══════════ CARD ═══════════ */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+            padding: 24px; transition: all 0.25s;
+        }
+        .card:hover { border-color: var(--border-hover); }
+        .card-title {
+            font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 700; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card-title::before {
+            content: ''; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent); display: inline-block;
+        }
+
+        /* ═══════════ SENSOR METRICS ═══════════ */
+        .sensor-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .sensor-card {
+            background: rgba(0,0,0,0.2); border-radius: 12px; padding: 20px;
+            text-align: center; border: 1px solid var(--border); position: relative;
+            overflow: hidden; transition: all 0.25s;
+        }
+        .sensor-card:hover { border-color: var(--border-hover); }
+        .sensor-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .sensor-card.s-temp::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .sensor-card.s-hum::before { background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+        .sensor-card.s-light::before { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+        .sensor-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .sensor-value { font-size: 2.2rem; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
+        .s-temp .sensor-value { color: #f97316; }
+        .s-hum .sensor-value { color: var(--cyan); }
+        .s-light .sensor-value { color: var(--amber); }
+
+        /* AI Status */
+        .ai-box {
+            margin-top: 14px; background: rgba(0,0,0,0.2); border-radius: 12px;
+            padding: 18px; text-align: center; border: 1px solid var(--border);
+        }
+        .ai-ok { color: var(--emerald); font-weight: 700; font-size: 1rem; }
+        .ai-warn {
+            color: var(--rose); font-weight: 700; font-size: 1rem;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .ai-rec { font-size: 0.8rem; color: var(--amber); margin-top: 8px; font-weight: 600; }
+
+        /* Mini Stats */
+        .mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+        .ms-box {
+            background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px;
+            text-align: center; font-size: 0.7rem; color: var(--text-muted);
+        }
+        .ms-box span { display: block; font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-top: 3px; }
+
+        /* LED Button */
+        .led-area { text-align: center; padding: 20px 0; }
+        .led-btn {
+            width: 120px; height: 120px; border-radius: 50%; border: none;
+            font-size: 1.3rem; font-weight: 800; color: white; cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); outline: none;
+        }
+        .led-on {
+            background: linear-gradient(135deg, var(--emerald), #34d399);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.4), 0 0 80px rgba(16, 185, 129, 0.15);
+        }
+        .led-off {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+            color: var(--text-muted);
+        }
+        .led-btn:hover { transform: scale(1.05); }
+        .led-btn:active { transform: scale(0.95); }
+
+        /* ═══════════ TABLE ═══════════ */
+        .tbl-wrap { max-height: 300px; overflow-y: auto; margin-top: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { 
+            padding: 10px 14px; text-align: left; font-size: 0.7rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0;
+            background: var(--bg-card);
+        }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        tr { transition: background 0.15s; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        /* ═══════════ FORM ═══════════ */
+        .form-g { margin-bottom: 16px; }
+        .form-g label { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-g input, .form-g select {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid var(--border); background: rgba(0,0,0,0.2);
+            color: var(--text-primary); font-family: inherit; font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+        .form-g input:focus, .form-g select:focus { outline: none; border-color: var(--accent); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-submit {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: var(--accent); color: white; font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-submit:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-submit.green { background: var(--emerald); }
+        .btn-submit.green:hover { background: #34d399; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+
+        /* ═══════════ RULE CARDS ═══════════ */
+        .rule-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; background: rgba(0,0,0,0.15); border: 1px solid var(--border);
+            border-radius: 10px; margin-bottom: 8px; transition: all 0.2s;
+        }
+        .rule-item:hover { border-color: var(--border-hover); background: rgba(0,0,0,0.25); }
+        .rule-item .ri-name { font-weight: 700; font-size: 0.9rem; }
+        .rule-item .ri-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+        .rule-item .ri-actions { display: flex; gap: 6px; }
+        .rbtn {
+            padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            font-size: 0.75rem; font-weight: 600; transition: all 0.2s; font-family: inherit;
+        }
+        .rbtn:hover { background: rgba(255,255,255,0.05); }
+        .rbtn.on { border-color: var(--emerald); color: var(--emerald); }
+        .rbtn.off { border-color: var(--rose); color: var(--rose); }
+        .rbtn.del { border-color: var(--rose); color: var(--rose); }
+        .rbtn.del:hover { background: rgba(244,63,94,0.1); }
+
+        /* ═══════════ MODAL ═══════════ */
+        .modal {
+            display: none; position: fixed; z-index: 9999; inset: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 20px; width: 90%; max-width: 480px; padding: 32px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5); position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 16px; right: 20px; font-size: 1.3rem;
+            color: var(--text-muted); cursor: pointer; transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-box h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+        .modal-box .sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+        .pay-price { font-size: 2.2rem; font-weight: 800; color: var(--amber); margin: 16px 0 8px; }
+        .pay-price small { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+        .qr-box { background: white; padding: 12px; border-radius: 12px; display: inline-block; margin: 12px 0 16px; }
+        .btn-pay {
+            width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer;
+            font-weight: 700; font-size: 0.9rem; transition: all 0.2s; font-family: inherit;
+            background: linear-gradient(135deg, var(--rose), #fb7185); color: white;
+        }
+        .btn-pay:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(244,63,94,0.3); }
+        .support-form { display: none; margin-top: 16px; }
+        .support-form textarea {
+            width: 100%; height: 100px; background: rgba(0,0,0,0.2); color: var(--text-primary);
+            border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+            font-family: inherit; font-size: 0.85rem; resize: vertical; margin-bottom: 10px;
+        }
+        .support-form textarea:focus { outline: none; border-color: var(--accent); }
+
+        /* ═══════════ SCROLLBAR ═══════════ */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        /* ═══════════ LIVE DOT ═══════════ */
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--emerald);
+            display: inline-block; animation: livePulse 2s infinite; margin-right: 6px;
+        }
+        @keyframes livePulse {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+            70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
+        }
+        .status-badge.online { background: rgba(16,185,129,0.1); color: var(--emerald); }
+        .status-badge.offline { background: rgba(100,116,139,0.1); color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ═══════════ SIDEBAR ═══════════ -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-name">AIoT CÔNG NGHIỆP</div>
+                <div class="brand-tag">Nền tảng quản lý nhiệt độ</div>
+                <span class="brand-version">v3.0 PRO</span>
+            </div>
+
+            <nav class="nav">
+                <div class="nav-section">Chính</div>
+                <div class="nav-item active" onclick="switchTab('dashboard', this)">
+                    <span class="nav-icon">📊</span> Tổng Quan
+                </div>
+                <div class="nav-item" onclick="switchTab('devices', this)">
+                    <span class="nav-icon">📱</span> Thiết Bị
+                </div>
+                <div class="nav-item" onclick="switchTab('automation', this)">
+                    <span class="nav-icon">⚙️</span> Tự Động Hóa
+                </div>
+                <div class="nav-item" onclick="switchTab('userlogs', this)">
+                    <span class="nav-icon">📝</span> Lịch Sử
+                </div>
+
+                <div class="nav-section">Khác</div>
+                <div class="nav-item" onclick="openSupportModal()">
+                    <span class="nav-icon">💬</span> Hỏi Chuyên Gia
+                </div>
+                <div class="nav-item" onclick="toggleTheme()">
+                    <span class="nav-icon">🌗</span> Giao Diện
+                </div>
+            </nav>
+
+            <div class="user-card">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Quản trị viên</div>
+                </div>
+                <div class="user-logout" onclick="window.location.href='/logout'" title="Đăng xuất">🚪</div>
+            </div>
+        </aside>
+
+        <!-- ═══════════ MAIN ═══════════ -->
+        <div class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1>Tổng Quan Hệ Thống</h1>
+                    <p><span class="live-dot"></span>Đang hoạt động — Cập nhật realtime</p>
+                </div>
+                <div class="topbar-right">
+                    <button class="tb-btn primary" onclick="simulateData()">✨ Gửi Dữ Liệu Ảo</button>
+                    <button class="tb-btn" onclick="window.location.href='/api/export'">📥 Xuất CSV</button>
+                    <div class="notif-wrap">
+                        <button class="notif-btn" onclick="toggleNotifications()">🔔</button>
+                        <span class="notif-dot" id="notifBadge" style="display:none;">0</span>
+                        <div class="notif-panel" id="notifDropdown">
+                            <div class="notif-header">🔔 Thông Báo</div>
+                            <div class="notif-list" id="notifList">
+                                <div style="padding: 30px; text-align: center; color: var(--text-muted);">Không có thông báo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- ═══════════ TAB: DASHBOARD ═══════════ -->
+                <div id="tab-dashboard" class="tab-pane active">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon">📱</div>
+                            <div class="kpi-label">Thiết Bị</div>
+                            <div class="kpi-value" id="ov-devices">0</div>
+                            <div class="kpi-sub">Tổng đã đăng ký</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">🟢</div>
+                            <div class="kpi-label">Online</div>
+                            <div class="kpi-value" id="ov-online" style="color: var(--emerald);">0</div>
+                            <div class="kpi-sub">Đang kết nối</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">🚨</div>
+                            <div class="kpi-label">Cảnh Báo</div>
+                            <div class="kpi-value" id="ov-alerts" style="color: var(--rose);">0</div>
+                            <div class="kpi-sub">Trong hôm nay</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">👥</div>
+                            <div class="kpi-label">Người Dùng</div>
+                            <div class="kpi-value" id="ov-users" style="color: var(--purple);">0</div>
+                            <div class="kpi-sub">Tổng tài khoản</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">⚙️</div>
+                            <div class="kpi-label">Quy Tắc</div>
+                            <div class="kpi-value" id="ov-rules" style="color: var(--amber);">0</div>
+                            <div class="kpi-sub">Đang kích hoạt</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-title">Live Telemetry</div>
+                                <div class="sensor-grid">
+                                    <div class="sensor-card s-temp">
+                                        <div class="sensor-label">Nhiệt độ</div>
+                                        <div class="sensor-value" id="current-temp">--°C</div>
+                                    </div>
+                                    <div class="sensor-card s-hum">
+                                        <div class="sensor-label">Độ ẩm</div>
+                                        <div class="sensor-value" id="current-hum">--%</div>
+                                    </div>
+                                    <div class="sensor-card s-light">
+                                        <div class="sensor-label">Ánh sáng</div>
+                                        <div class="sensor-value" id="current-light">--%</div>
+                                    </div>
+                                </div>
+                                <div class="ai-box">
+                                    <div class="sensor-label" style="margin-bottom: 8px;">AI Diagnostics</div>
+                                    <div id="current-ai" class="ai-ok">Đang phân tích hệ thống...</div>
+                                    <div id="ai-rec" class="ai-rec"></div>
+                                </div>
+                                <div class="mini-stats">
+                                    <div class="ms-box">Max Temp <span id="s-t-max">--</span></div>
+                                    <div class="ms-box">Min Temp <span id="s-t-min">--</span></div>
+                                    <div class="ms-box">Avg Temp <span id="s-t-avg">--</span></div>
+                                    <div class="ms-box">Max Hum <span id="s-h-max">--</span></div>
+                                    <div class="ms-box">Min Hum <span id="s-h-min">--</span></div>
+                                    <div class="ms-box">Avg Hum <span id="s-h-avg">--</span></div>
+                                    <div class="ms-box">Max Light <span id="s-l-max">--</span></div>
+                                    <div class="ms-box">Min Light <span id="s-l-min">--</span></div>
+                                    <div class="ms-box">Avg Light <span id="s-l-avg">--</span></div>
+                                </div>
+                            </div>
+                            <div class="card" style="margin-top: 20px;">
+                                <div class="card-title">Smart Device Control</div>
+                                <div class="led-area">
+                                    <button id="ledBtn" class="led-btn led-off" onclick="toggleLED()">OFF</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card">
+                                <div class="card-title">Analytics Chart</div>
+                                <canvas id="sensorChart" height="150"></canvas>
+                            </div>
+                            <div class="card" style="margin-top: 20px;">
+                                <div class="card-title">System Logs</div>
+                                <div class="tbl-wrap">
+                                    <table>
+                                        <thead><tr><th>Event / Action</th><th>Timestamp</th></tr></thead>
+                                        <tbody id="logs-body"><tr><td colspan="2" style="text-align:center; color: var(--text-muted);">Khởi tạo hệ thống...</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════ TAB: THIẾT BỊ ═══════════ -->
+                <div id="tab-devices" class="tab-pane">
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-title">Thêm Thiết Bị Mới</div>
+                            <div class="form-g"><label>Mã Thiết Bị</label><input type="text" id="newDevId" placeholder="VD: esp32_phongngu"></div>
+                            <div class="form-g"><label>Tên Hiển Thị</label><input type="text" id="newDevName" placeholder="VD: ESP32 Phòng Ngủ"></div>
+                            <button class="btn-submit" onclick="addDevice()">+ Xác Nhận Thêm</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Thiết Bị Đã Đăng Ký</div>
+                            <div class="tbl-wrap" style="max-height: 400px;">
+                                <table>
+                                    <thead><tr><th>Mã</th><th>Tên</th><th>Trạng Thái</th></tr></thead>
+                                    <tbody id="devices-body"><tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Đang tải...</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════ TAB: TỰ ĐỘNG HÓA ═══════════ -->
+                <div id="tab-automation" class="tab-pane">
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-title">Tạo Quy Tắc Mới</div>
+                            <div class="form-g"><label>Tên quy tắc</label><input type="text" id="ruleName" placeholder="VD: Bật quạt khi nóng"></div>
+                            <div class="form-row">
+                                <div class="form-g"><label>Cảm biến</label><select id="ruleSensor"><option value="temperature">Nhiệt độ</option><option value="humidity">Độ ẩm</option><option value="light">Ánh sáng</option></select></div>
+                                <div class="form-g"><label>Điều kiện</label><select id="ruleCondition"><option value=">">Lớn hơn (>)</option><option value="<">Nhỏ hơn (<)</option><option value=">=">≥</option><option value="<=">≤</option></select></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-g"><label>Ngưỡng giá trị</label><input type="number" id="ruleThreshold" placeholder="VD: 35"></div>
+                                <div class="form-g"><label>Hành động</label><select id="ruleAction"><option value="1">BẬT LED</option><option value="0">TẮT LED</option></select></div>
+                            </div>
+                            <button class="btn-submit green" onclick="addAutoRule()">+ Tạo Quy Tắc</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Danh Sách Quy Tắc</div>
+                            <div id="rules-list" style="max-height: 450px; overflow-y: auto;">
+                                <div style="text-align:center; color: var(--text-muted); padding: 30px;">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════ TAB: LỊCH SỬ ═══════════ -->
+                <div id="tab-userlogs" class="tab-pane">
+                    <div class="card">
+                        <div class="card-title">Nhật Ký Hệ Thống</div>
+                        <div class="tbl-wrap" style="max-height: 500px;">
+                            <table>
+                                <thead><tr><th>Tài Khoản</th><th>Hành Động</th><th>Thời Gian</th></tr></thead>
+                                <tbody id="user-logs-body"><tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Đang tải...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ SUPPORT MODAL ═══════════ -->
+    <div id="supportModal" class="modal">
+        <div class="modal-box">
+            <span class="modal-close" onclick="closeSupportModal()">&times;</span>
+            <h2>Dịch Vụ Hỗ Trợ AIoT</h2>
+            <p class="sub">Mọi vấn đề về phần cứng, code, hoặc lỗi hệ thống.</p>
+            <div id="paymentSection" style="text-align: center;">
+                <div class="pay-price">50.000 VNĐ <small>/ Lần</small></div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Quét mã QR ACB để thanh toán</p>
+                <div class="qr-box">
+                    <img src="https://img.vietqr.io/image/acb-41943337-compact2.png?amount=50000&addInfo=Ho tro AIoT&accountName=TRAN THANH BINH" alt="VietQR ACB" width="200">
+                </div>
+                <br>
+                <button class="btn-pay" onclick="simulatePayment()">💳 TÔI ĐÃ CHUYỂN KHOẢN</button>
+            </div>
+            <div id="ticketSection" class="support-form">
+                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">Gửi yêu cầu hỗ trợ:</label>
+                <textarea id="ticketMessage" placeholder="Mô tả chi tiết lỗi bạn đang gặp phải..."></textarea>
+                <button class="btn-submit" onclick="submitTicket()">GỬI YÊU CẦU</button>
+                <div id="ticketStatus" style="margin-top:10px; color: var(--emerald); font-weight: 600;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLedState = 0;
+        let hasTriggeredSupport = false;
+
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        
+        let gT = ctx.createLinearGradient(0,0,0,400); gT.addColorStop(0,'rgba(249,115,22,0.3)'); gT.addColorStop(1,'rgba(249,115,22,0)');
+        let gH = ctx.createLinearGradient(0,0,0,400); gH.addColorStop(0,'rgba(6,182,212,0.3)'); gH.addColorStop(1,'rgba(6,182,212,0)');
+        let gL = ctx.createLinearGradient(0,0,0,400); gL.addColorStop(0,'rgba(245,158,11,0.3)'); gL.addColorStop(1,'rgba(245,158,11,0)');
+
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Nhiệt độ (°C)', borderColor: '#f97316', backgroundColor: gT, data: [], tension: 0.4, fill: true, borderWidth: 2, pointRadius: 0 },
+                    { label: 'Độ ẩm (%)', borderColor: '#06b6d4', backgroundColor: gH, data: [], tension: 0.4, fill: true, borderWidth: 2, pointRadius: 0 },
+                    { label: 'Ánh sáng (%)', borderColor: '#f59e0b', backgroundColor: gL, data: [], tension: 0.4, fill: true, borderWidth: 2, pointRadius: 0 }
+                ]
+            },
+            options: { 
+                responsive: true, interaction: { mode: 'index', intersect: false },
+                scales: { y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { font: { size: 11 } } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } },
+                animation: { duration: 400 },
+                plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 6, padding: 20, font: { size: 11, weight: '600' } } } }
+            }
+        });
+
+        function updateLedUI(s) {
+            currentLedState = s;
+            const b = document.getElementById('ledBtn');
+            if(s===1){b.className='led-btn led-on';b.textContent='ON';}else{b.className='led-btn led-off';b.textContent='OFF';}
+        }
+
+        async function fetchStats() {
+            try {
+                const r = await fetch('/api/stats'); const d = await r.json();
+                document.getElementById('s-t-max').innerText=d.temperature.max+'°'; document.getElementById('s-t-min').innerText=d.temperature.min+'°'; document.getElementById('s-t-avg').innerText=d.temperature.avg+'°';
+                document.getElementById('s-h-max').innerText=d.humidity.max+'%'; document.getElementById('s-h-min').innerText=d.humidity.min+'%'; document.getElementById('s-h-avg').innerText=d.humidity.avg+'%';
+                document.getElementById('s-l-max').innerText=d.light.max+'%'; document.getElementById('s-l-min').innerText=d.light.min+'%'; document.getElementById('s-l-avg').innerText=d.light.avg+'%';
+                if(d.overview){document.getElementById('ov-devices').innerText=d.overview.total_devices;document.getElementById('ov-online').innerText=d.overview.online_devices;document.getElementById('ov-alerts').innerText=d.overview.alerts_today;document.getElementById('ov-users').innerText=d.overview.total_users;document.getElementById('ov-rules').innerText=d.overview.active_rules;}
+            } catch(e){}
+        }
+
+        async function fetchSensorData() {
+            try {
+                const r = await fetch('/api/sensor'); const data = await r.json();
+                if(data.length>0){
+                    document.getElementById('current-temp').textContent=data[0].temperature+'°C';
+                    document.getElementById('current-hum').textContent=data[0].humidity+'%';
+                    document.getElementById('current-light').textContent=(data[0].light!==null?data[0].light+'%':'--%');
+                    const ai=document.getElementById('current-ai'),rec=document.getElementById('ai-rec');
+                    if(data[0].ai_status.includes("|")){let p=data[0].ai_status.split("|");ai.innerHTML=p[0];rec.innerHTML="💡 "+p[1];ai.className="ai-warn";if(!hasTriggeredSupport){openSupportModal();hasTriggeredSupport=true;}}
+                    else if(data[0].ai_status.includes("BAT THUONG")||data[0].ai_status.includes("BẤT THƯỜNG")){ai.innerHTML=data[0].ai_status;rec.innerHTML="";ai.className="ai-warn";if(!hasTriggeredSupport){openSupportModal();hasTriggeredSupport=true;}}
+                    else{ai.className="ai-ok";ai.innerHTML="✨ Hệ thống ổn định";rec.innerHTML="";hasTriggeredSupport=false;}
+                    const rev=[...data].reverse();
+                    sensorChart.data.labels=rev.map(d=>new Date(d.timestamp+"Z").toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+                    sensorChart.data.datasets[0].data=rev.map(d=>d.temperature);sensorChart.data.datasets[1].data=rev.map(d=>d.humidity);sensorChart.data.datasets[2].data=rev.map(d=>d.light||0);
+                    sensorChart.update();
+                }
+                fetchStats();
+            } catch(e){}
+        }
+
+        async function fetchLogs(){try{const r=await fetch('/api/logs');const l=await r.json();const t=document.getElementById('logs-body');t.innerHTML='';l.forEach(log=>{const a=log.action.includes('CANH BAO')||log.action.includes('CẢNH BÁO');t.innerHTML+=`<tr><td style="color:${a?'var(--rose)':'inherit'};font-weight:${a?'700':'400'}">${a?'🚨 ':'📝 '}${log.action}</td><td style="color:var(--text-muted);font-size:0.8rem">${new Date(log.timestamp+"Z").toLocaleString('vi-VN')}</td></tr>`;});}catch(e){}}
+        async function fetchLedState(){try{const r=await fetch('/api/led');const d=await r.json();updateLedUI(d.state);}catch(e){}}
+        async function fetchDevices(){try{const r=await fetch('/api/devices');const d=await r.json();const t=document.getElementById('devices-body');t.innerHTML='';d.forEach(v=>{const s=v.status==='online';t.innerHTML+=`<tr><td style="color:var(--accent-light);font-weight:600">${v.id}</td><td>${v.name}</td><td><span class="status-badge ${v.status}">${s?'● ONLINE':'○ OFFLINE'}</span></td></tr>`;});}catch(e){}}
+        async function addDevice(){const i=document.getElementById('newDevId').value,n=document.getElementById('newDevName').value;if(!i||!n)return alert("Vui lòng nhập đủ thông tin!");try{const r=await fetch('/api/devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:i,device_name:n})});const d=await r.json();if(d.status==='success'){alert("Thêm thiết bị thành công!");document.getElementById('newDevId').value="";document.getElementById('newDevName').value="";fetchDevices();}else{alert("Lỗi: "+d.message);}}catch(e){alert("Lỗi kết nối");}}
+        async function fetchUserLogs(){try{const r=await fetch('/api/user_logs');const l=await r.json();const t=document.getElementById('user-logs-body');if(!t)return;t.innerHTML='';l.forEach(log=>{t.innerHTML+=`<tr><td style="color:var(--accent-light);font-weight:600">@${log.username}</td><td>${log.action}</td><td style="color:var(--text-muted);font-size:0.8rem">${new Date(log.timestamp+"Z").toLocaleString('vi-VN')}</td></tr>`;});}catch(e){}}
+
+        async function fetchAutoRules(){try{const r=await fetch('/api/auto_rules');const rules=await r.json();const c=document.getElementById('rules-list');c.innerHTML='';if(rules.length===0){c.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px">Chưa có quy tắc nào</div>';return;}rules.forEach(r=>{const sc=r.is_active?'on':'off';const st=r.is_active?'🟢 BẬT':'🔴 TẮT';const at=r.action_value===1?'BẬT LED':'TẮT LED';c.innerHTML+=`<div class="rule-item"><div><div class="ri-name">${r.name}</div><div class="ri-desc">Khi ${r.sensor_label} ${r.condition} ${r.threshold} → ${at}</div></div><div class="ri-actions"><button class="rbtn ${sc}" onclick="toggleRule(${r.id})">${st}</button><button class="rbtn del" onclick="deleteRule(${r.id})">🗑️</button></div></div>`;});}catch(e){}}
+        async function addAutoRule(){const n=document.getElementById('ruleName').value,s=document.getElementById('ruleSensor').value,c=document.getElementById('ruleCondition').value,t=parseFloat(document.getElementById('ruleThreshold').value),a=parseInt(document.getElementById('ruleAction').value);if(!n||isNaN(t))return alert("Vui lòng nhập đủ thông tin!");try{const r=await fetch('/api/auto_rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rule_name:n,sensor_type:s,condition:c,threshold:t,action_value:a})});const d=await r.json();if(d.status==='success'){alert("Tạo quy tắc thành công!");document.getElementById('ruleName').value='';document.getElementById('ruleThreshold').value='';fetchAutoRules();}}catch(e){alert("Lỗi kết nối");}}
+        async function toggleRule(id){await fetch('/api/auto_rules/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});fetchAutoRules();}
+        async function deleteRule(id){if(!confirm("Bạn có chắc muốn xóa quy tắc này?"))return;await fetch('/api/auto_rules?id='+id,{method:'DELETE'});fetchAutoRules();}
+
+        async function fetchNotifications(){try{const r=await fetch('/api/notifications');const d=await r.json();const b=document.getElementById('notifBadge'),l=document.getElementById('notifList');if(d.unread>0){b.style.display='flex';b.textContent=d.unread;}else{b.style.display='none';}if(d.notifications.length===0){l.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-muted)">Không có thông báo</div>';return;}l.innerHTML='';d.notifications.forEach(n=>{l.innerHTML+=`<div class="notif-item ${n.type}"><div class="ni-title">${n.title}</div><div class="ni-msg">${n.message}</div><div class="ni-time">${new Date(n.timestamp+"Z").toLocaleString('vi-VN')}</div></div>`;});}catch(e){}}
+        function toggleNotifications(){const d=document.getElementById('notifDropdown');d.classList.toggle('show');if(d.classList.contains('show')){fetch('/api/notifications/read',{method:'POST'});setTimeout(()=>{document.getElementById('notifBadge').style.display='none';},500);}}
+        document.addEventListener('click',e=>{const w=document.querySelector('.notif-wrap');if(w&&!w.contains(e.target))document.getElementById('notifDropdown').classList.remove('show');});
+
+        function switchTab(id,el){document.querySelectorAll('.tab-pane').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');if(id==='userlogs')fetchUserLogs();if(id==='automation')fetchAutoRules();if(id==='devices')fetchDevices();}
+        async function toggleLED(){const n=currentLedState===1?0:1;updateLedUI(n);try{await fetch('/api/led',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:n})});fetchLogs();}catch(e){updateLedUI(currentLedState===1?0:1);}}
+        function toggleTheme(){document.body.classList.toggle('light-mode');localStorage.setItem('lightMode',document.body.classList.contains('light-mode'));}
+        if(localStorage.getItem('lightMode')==='true')document.body.classList.add('light-mode');
+
+        async function simulateData(){const ab=Math.random()>0.7;let t,h,l;if(ab){t=Math.floor(Math.random()*15)+36;h=Math.floor(Math.random()*20)+10;l=Math.floor(Math.random()*15)+5;}else{t=Math.floor(Math.random()*16)+20;h=Math.floor(Math.random()*46)+40;l=Math.floor(Math.random()*56)+30;}await fetch('/api/sensor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({temperature:t,humidity:h,light:l})});fetchSensorData();fetchLogs();fetchNotifications();}
+
+        function openSupportModal(){document.getElementById('supportModal').style.display='flex';}
+        function closeSupportModal(){document.getElementById('supportModal').style.display='none';}
+        function simulatePayment(){document.getElementById('paymentSection').style.display='none';document.getElementById('ticketSection').style.display='block';}
+        async function submitTicket(){const m=document.getElementById('ticketMessage').value;if(!m)return alert("Vui lòng nhập nội dung!");try{const r=await fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m,is_paid:1})});const d=await r.json();if(d.status==='success'){document.getElementById('ticketStatus').innerText="Gửi yêu cầu thành công!";document.getElementById('ticketMessage').value="";}}catch(e){alert("Lỗi kết nối");}}
+
+        function initDashboard(){fetchSensorData();fetchLedState();fetchLogs();fetchDevices();fetchUserLogs();fetchNotifications();setInterval(fetchSensorData,3000);setInterval(fetchLedState,3000);setInterval(fetchLogs,3000);setInterval(fetchDevices,5000);setInterval(fetchUserLogs,5000);setInterval(fetchNotifications,5000);}
+        window.onload=initDashboard;
+    </script>
+</body>
+</html>
