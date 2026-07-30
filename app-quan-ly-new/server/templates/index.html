@@ -5,9 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIoT Platform Pro — Enterprise Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* CSS Toggle Switch cho AI Autopilot */
+        .switch-toggle input:checked + .slider-toggle {
+            background-color: var(--emerald) !important;
+        }
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .switch-toggle input:checked + .slider-toggle:before {
+            transform: translateX(22px);
+        }
         :root {
             --bg-primary: #0a0e1a;
             --bg-secondary: #111827;
@@ -553,6 +573,13 @@
                                     <div class="sensor-label" style="margin-bottom: 8px;">AI Diagnostics</div>
                                     <div id="current-ai" class="ai-ok">Đang phân tích hệ thống...</div>
                                     <div id="ai-rec" class="ai-rec"></div>
+                                    <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                                        <span class="sensor-label" style="margin: 0; color: #10b981; font-weight: bold; font-size: 0.8rem;"><i class="fa-solid fa-robot me-1"></i>AI Autopilot</span>
+                                        <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 22px;">
+                                            <input type="checkbox" id="aiAutopilotSwitch" style="opacity: 0; width: 0; height: 0;" checked>
+                                            <span class="slider-toggle" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px;"></span>
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="mini-stats">
                                     <div class="ms-box">Max Temp <span id="s-t-max">--</span></div>
@@ -567,9 +594,23 @@
                                 </div>
                             </div>
                             <div class="card" style="margin-top: 20px;">
-                                <div class="card-title">Smart Device Control</div>
-                                <div class="led-area">
-                                    <button id="ledBtn" class="led-btn led-off" onclick="toggleLED()">OFF</button>
+                                <div class="card-title">Điều Khiển Thiết Bị & Cảm Biến</div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Chế độ cảm biến (Auto)</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="sensorAutoBtn" onchange="toggleSensorAuto(this)">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="led-area" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px 0;">
+                                    <button id="ledBtn-4" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(4)"><span>LED 1</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 4</span></button>
+                                    <button id="ledBtn-5" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(5)"><span>LED 2</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 5</span></button>
+                                    <button id="ledBtn-6" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(6)"><span>LED 3</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 6</span></button>
+                                    <button id="ledBtn-7" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(7)"><span>LED 4</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 7</span></button>
+                                    <button id="ledBtn-15" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(15)"><span>LED 5</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 15</span></button>
+                                    <button id="ledBtn-16" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(16)"><span>LED 6</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 16</span></button>
+                                    <button id="ledBtn-17" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(17)"><span>LED 7</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 17</span></button>
+                                    <button id="ledBtn-18" class="led-btn led-off" style="width:100%; height:50px; border-radius:8px; font-size:0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="toggleLED(18)"><span>LED 8</span><span style="font-size: 0.6rem; opacity: 0.7;">GPIO 18</span></button>
                                 </div>
                             </div>
                         </div>
@@ -625,6 +666,19 @@
                             <div class="form-row">
                                 <div class="form-g"><label>Ngưỡng giá trị</label><input type="number" id="ruleThreshold" placeholder="VD: 35"></div>
                                 <div class="form-g"><label>Hành động</label><select id="ruleAction"><option value="1">BẬT LED</option><option value="0">TẮT LED</option></select></div>
+                            </div>
+                            <div class="form-g">
+                                <label>Target LED (Chân Pin)</label>
+                                <select id="rulePinTarget">
+                                    <option value="4">LED 1 (GPIO 4)</option>
+                                    <option value="5">LED 2 (GPIO 5)</option>
+                                    <option value="6">LED 3 (GPIO 6)</option>
+                                    <option value="7">LED 4 (GPIO 7)</option>
+                                    <option value="15">LED 5 (GPIO 15)</option>
+                                    <option value="16">LED 6 (GPIO 16)</option>
+                                    <option value="17">LED 7 (GPIO 17)</option>
+                                    <option value="18">LED 8 (GPIO 18)</option>
+                                </select>
                             </div>
                             <button class="btn-submit green" onclick="addAutoRule()">+ Tạo Quy Tắc</button>
                         </div>
@@ -745,34 +799,255 @@
         }
 
         async function fetchLogs(){try{const r=await fetch('/api/logs');const l=await r.json();const t=document.getElementById('logs-body');t.innerHTML='';l.forEach(log=>{const a=log.action.includes('CANH BAO')||log.action.includes('CẢNH BÁO');t.innerHTML+=`<tr><td style="color:${a?'var(--rose)':'inherit'};font-weight:${a?'700':'400'}">${a?'🚨 ':'📝 '}${log.action}</td><td style="color:var(--text-muted);font-size:0.8rem">${new Date(log.timestamp+"Z").toLocaleString('vi-VN')}</td></tr>`;});}catch(e){}}
-        async function fetchLedState(){try{const r=await fetch('/api/led');const d=await r.json();updateLedUI(d.state);}catch(e){}}
+        async function fetchLedState(){
+            try {
+                const r = await fetch('/api/led');
+                const d = await r.json();
+                const pins = [4, 5, 6, 7, 15, 16, 17, 18];
+                pins.forEach(pin => {
+                    const state = d['led_' + pin] !== undefined ? d['led_' + pin] : 0;
+                    const btn = document.getElementById('ledBtn-' + pin);
+                    if (btn) {
+                        if (state === 1) {
+                            btn.className = 'led-btn led-on';
+                        } else {
+                            btn.className = 'led-btn led-off';
+                        }
+                    }
+                });
+                const autoState = d['sensor_auto'] !== undefined ? d['sensor_auto'] : 1;
+                document.getElementById('sensorAutoBtn').checked = (autoState === 1);
+            } catch(e){}
+        }
         async function fetchDevices(){try{const r=await fetch('/api/devices');const d=await r.json();const t=document.getElementById('devices-body');t.innerHTML='';d.forEach(v=>{const s=v.status==='online';t.innerHTML+=`<tr><td style="color:var(--accent-light);font-weight:600">${v.id}</td><td>${v.name}</td><td><span class="status-badge ${v.status}">${s?'● ONLINE':'○ OFFLINE'}</span></td></tr>`;});}catch(e){}}
         async function addDevice(){const i=document.getElementById('newDevId').value,n=document.getElementById('newDevName').value;if(!i||!n)return alert("Vui lòng nhập đủ thông tin!");try{const r=await fetch('/api/devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:i,device_name:n})});const d=await r.json();if(d.status==='success'){alert("Thêm thiết bị thành công!");document.getElementById('newDevId').value="";document.getElementById('newDevName').value="";fetchDevices();}else{alert("Lỗi: "+d.message);}}catch(e){alert("Lỗi kết nối");}}
         async function fetchUserLogs(){try{const r=await fetch('/api/user_logs');const l=await r.json();const t=document.getElementById('user-logs-body');if(!t)return;t.innerHTML='';l.forEach(log=>{t.innerHTML+=`<tr><td style="color:var(--accent-light);font-weight:600">@${log.username}</td><td>${log.action}</td><td style="color:var(--text-muted);font-size:0.8rem">${new Date(log.timestamp+"Z").toLocaleString('vi-VN')}</td></tr>`;});}catch(e){}}
-
-        async function fetchAutoRules(){try{const r=await fetch('/api/auto_rules');const rules=await r.json();const c=document.getElementById('rules-list');c.innerHTML='';if(rules.length===0){c.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px">Chưa có quy tắc nào</div>';return;}rules.forEach(r=>{const sc=r.is_active?'on':'off';const st=r.is_active?'🟢 BẬT':'🔴 TẮT';const at=r.action_value===1?'BẬT LED':'TẮT LED';c.innerHTML+=`<div class="rule-item"><div><div class="ri-name">${r.name}</div><div class="ri-desc">Khi ${r.sensor_label} ${r.condition} ${r.threshold} → ${at}</div></div><div class="ri-actions"><button class="rbtn ${sc}" onclick="toggleRule(${r.id})">${st}</button><button class="rbtn del" onclick="deleteRule(${r.id})">🗑️</button></div></div>`;});}catch(e){}}
-        async function addAutoRule(){const n=document.getElementById('ruleName').value,s=document.getElementById('ruleSensor').value,c=document.getElementById('ruleCondition').value,t=parseFloat(document.getElementById('ruleThreshold').value),a=parseInt(document.getElementById('ruleAction').value);if(!n||isNaN(t))return alert("Vui lòng nhập đủ thông tin!");try{const r=await fetch('/api/auto_rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rule_name:n,sensor_type:s,condition:c,threshold:t,action_value:a})});const d=await r.json();if(d.status==='success'){alert("Tạo quy tắc thành công!");document.getElementById('ruleName').value='';document.getElementById('ruleThreshold').value='';fetchAutoRules();}}catch(e){alert("Lỗi kết nối");}}
+ 
+        async function fetchAutoRules(){try{const r=await fetch('/api/auto_rules');const rules=await r.json();const c=document.getElementById('rules-list');c.innerHTML='';if(rules.length===0){c.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px">Chưa có quy tắc nào</div>';return;}rules.forEach(r=>{const sc=r.is_active?'on':'off';const st=r.is_active?'🟢 BẬT':'🔴 TẮT';const at=r.action_value===1?`BẬT LED ${r.pin_target}`:`TẮT LED ${r.pin_target}`;c.innerHTML+=`<div class="rule-item"><div><div class="ri-name">${r.name}</div><div class="ri-desc">Khi ${r.sensor_label} ${r.condition} ${r.threshold} → ${at}</div></div><div class="ri-actions"><button class="rbtn ${sc}" onclick="toggleRule(${r.id})">${st}</button><button class="rbtn del" onclick="deleteRule(${r.id})">🗑️</button></div></div>`;});}catch(e){}}
+        async function addAutoRule(){const n=document.getElementById('ruleName').value,s=document.getElementById('ruleSensor').value,c=document.getElementById('ruleCondition').value,t=parseFloat(document.getElementById('ruleThreshold').value),a=parseInt(document.getElementById('ruleAction').value),p=parseInt(document.getElementById('rulePinTarget').value);if(!n||isNaN(t))return alert("Vui lòng nhập đủ thông tin!");try{const r=await fetch('/api/auto_rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rule_name:n,sensor_type:s,condition:c,threshold:t,action_value:a,pin_target:p})});const d=await r.json();if(d.status==='success'){alert("Tạo quy tắc thành công!");document.getElementById('ruleName').value='';document.getElementById('ruleThreshold').value='';fetchAutoRules();}}catch(e){alert("Lỗi kết nối");}}
         async function toggleRule(id){await fetch('/api/auto_rules/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});fetchAutoRules();}
         async function deleteRule(id){if(!confirm("Bạn có chắc muốn xóa quy tắc này?"))return;await fetch('/api/auto_rules?id='+id,{method:'DELETE'});fetchAutoRules();}
-
+ 
         async function fetchNotifications(){try{const r=await fetch('/api/notifications');const d=await r.json();const b=document.getElementById('notifBadge'),l=document.getElementById('notifList');if(d.unread>0){b.style.display='flex';b.textContent=d.unread;}else{b.style.display='none';}if(d.notifications.length===0){l.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-muted)">Không có thông báo</div>';return;}l.innerHTML='';d.notifications.forEach(n=>{l.innerHTML+=`<div class="notif-item ${n.type}"><div class="ni-title">${n.title}</div><div class="ni-msg">${n.message}</div><div class="ni-time">${new Date(n.timestamp+"Z").toLocaleString('vi-VN')}</div></div>`;});}catch(e){}}
         function toggleNotifications(){const d=document.getElementById('notifDropdown');d.classList.toggle('show');if(d.classList.contains('show')){fetch('/api/notifications/read',{method:'POST'});setTimeout(()=>{document.getElementById('notifBadge').style.display='none';},500);}}
         document.addEventListener('click',e=>{const w=document.querySelector('.notif-wrap');if(w&&!w.contains(e.target))document.getElementById('notifDropdown').classList.remove('show');});
-
+ 
         function switchTab(id,el){document.querySelectorAll('.tab-pane').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');if(id==='userlogs')fetchUserLogs();if(id==='automation')fetchAutoRules();if(id==='devices')fetchDevices();}
-        async function toggleLED(){const n=currentLedState===1?0:1;updateLedUI(n);try{await fetch('/api/led',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:n})});fetchLogs();}catch(e){updateLedUI(currentLedState===1?0:1);}}
+        
+        async function toggleLED(pin){
+            const btn = document.getElementById('ledBtn-' + pin);
+            const isCurrentlyOn = btn && btn.classList.contains('led-on');
+            const newState = isCurrentlyOn ? 0 : 1;
+            if (btn) btn.className = newState === 1 ? 'led-btn led-on' : 'led-btn led-off';
+            try {
+                await fetch('/api/led', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_id: 'led_' + pin, state: newState })
+                });
+                fetchLogs();
+            } catch(e) {
+                if (btn) btn.className = isCurrentlyOn ? 'led-btn led-on' : 'led-btn led-off';
+            }
+        }
+
+        async function toggleSensorAuto(el){
+            const newState = el.checked ? 1 : 0;
+            try {
+                await fetch('/api/led', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_id: 'sensor_auto', state: newState })
+                });
+                fetchLogs();
+            } catch(e) {
+                el.checked = !el.checked;
+            }
+        }
+        
         function toggleTheme(){document.body.classList.toggle('light-mode');localStorage.setItem('lightMode',document.body.classList.contains('light-mode'));}
         if(localStorage.getItem('lightMode')==='true')document.body.classList.add('light-mode');
-
+ 
         async function simulateData(){const ab=Math.random()>0.7;let t,h,l;if(ab){t=Math.floor(Math.random()*15)+36;h=Math.floor(Math.random()*20)+10;l=Math.floor(Math.random()*15)+5;}else{t=Math.floor(Math.random()*16)+20;h=Math.floor(Math.random()*46)+40;l=Math.floor(Math.random()*56)+30;}await fetch('/api/sensor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({temperature:t,humidity:h,light:l})});fetchSensorData();fetchLogs();fetchNotifications();}
-
+ 
         function openSupportModal(){document.getElementById('supportModal').style.display='flex';}
         function closeSupportModal(){document.getElementById('supportModal').style.display='none';}
         function simulatePayment(){document.getElementById('paymentSection').style.display='none';document.getElementById('ticketSection').style.display='block';}
         async function submitTicket(){const m=document.getElementById('ticketMessage').value;if(!m)return alert("Vui lòng nhập nội dung!");try{const r=await fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m,is_paid:1})});const d=await r.json();if(d.status==='success'){document.getElementById('ticketStatus').innerText="Gửi yêu cầu thành công!";document.getElementById('ticketMessage').value="";}}catch(e){alert("Lỗi kết nối");}}
-
+ 
         function initDashboard(){fetchSensorData();fetchLedState();fetchLogs();fetchDevices();fetchUserLogs();fetchNotifications();setInterval(fetchSensorData,3000);setInterval(fetchLedState,3000);setInterval(fetchLogs,3000);setInterval(fetchDevices,5000);setInterval(fetchUserLogs,5000);setInterval(fetchNotifications,5000);}
         window.onload=initDashboard;
+
+        // KẾT NỐI SOCKET.IO VÀ CÁC THAO TÁC AI WIDGET
+        document.addEventListener("DOMContentLoaded", function() {
+            const socket = io();
+            
+            // Lắng nghe sự kiện AI kích hoạt bật/tắt led tự động qua SocketIO
+            socket.on('ai_control_trigger', function(data) {
+                console.log("🤖 [AI Autopilot] Kích hoạt:", data);
+                if (data.action === 'fan_on') {
+                    const btn = document.getElementById('ledBtn-4');
+                    if (btn && !btn.classList.contains('led-on')) {
+                        btn.className = 'led-btn led-on';
+                        btn.textContent = 'ON';
+                    }
+                } else if (data.action === 'power_off') {
+                    const btn = document.getElementById('ledBtn-5');
+                    if (btn && btn.classList.contains('led-on')) {
+                        btn.className = 'led-btn led-off';
+                        btn.textContent = 'OFF';
+                    }
+                }
+                fetchLogs();
+            });
+
+            // Tải trạng thái Autopilot từ server khi load trang
+            const apSwitch = document.getElementById('aiAutopilotSwitch');
+            fetch('/api/ai/autopilot/status')
+                .then(res => res.json())
+                .then(data => {
+                    if (apSwitch) apSwitch.checked = data.active;
+                });
+
+            if (apSwitch) {
+                apSwitch.addEventListener('change', function(e) {
+                    fetch('/api/ai/autopilot', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ active: e.target.checked })
+                    });
+                });
+            }
+
+            // Xử lý bật/tắt cửa sổ Chat AI
+            const chatBtn = document.getElementById('ai-chat-btn');
+            const chatBox = document.getElementById('ai-chat-box');
+            const chatClose = document.getElementById('ai-chat-close');
+            
+            if (chatBtn && chatBox) {
+                chatBtn.addEventListener('click', () => {
+                    chatBox.classList.toggle('d-none');
+                });
+            }
+            if (chatClose && chatBox) {
+                chatClose.addEventListener('click', () => {
+                    chatBox.classList.add('d-none');
+                });
+            }
+            
+            const chatInput = document.getElementById('ai-chat-input');
+            const chatSend = document.getElementById('ai-chat-send');
+            const chatBody = document.getElementById('ai-chat-body');
+            
+            // Định nghĩa hàm gửi trả lời nhanh toàn cục gắn vào window
+            window.sendQuickReply = function(text) {
+                if (chatInput) {
+                    chatInput.value = text;
+                    sendChatMessage();
+                }
+            };
+            
+            function sendChatMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+                
+                // Thêm tin nhắn của User vào khung chat
+                const userDiv = document.createElement('div');
+                userDiv.className = 'bg-primary bg-opacity-30 p-3 rounded-4 text-white small align-self-end';
+                userDiv.style.maxWidth = '80%';
+                userDiv.style.background = 'rgba(59, 130, 246, 0.2)';
+                userDiv.style.padding = '8px 12px';
+                userDiv.style.borderRadius = '12px';
+                userDiv.style.alignSelf = 'flex-end';
+                userDiv.style.marginBottom = '8px';
+                userDiv.style.color = 'white';
+                userDiv.innerText = message;
+                chatBody.appendChild(userDiv);
+                
+                chatInput.value = '';
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                // Hiển thị hiệu ứng AI đang suy nghĩ
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'bg-dark bg-opacity-40 p-3 rounded-4 text-white-50 small border border-secondary border-opacity-10 align-self-start';
+                loadingDiv.style.maxWidth = '80%';
+                loadingDiv.style.background = 'rgba(255, 255, 255, 0.03)';
+                loadingDiv.style.padding = '8px 12px';
+                loadingDiv.style.borderRadius = '12px';
+                loadingDiv.style.alignSelf = 'flex-start';
+                loadingDiv.style.marginBottom = '8px';
+                loadingDiv.style.border = '1px solid rgba(255,255,255,0.05)';
+                loadingDiv.style.color = '#94a3b8';
+                loadingDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>AI đang phân tích dữ liệu...';
+                chatBody.appendChild(loadingDiv);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                // Gửi API lên Server
+                fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    loadingDiv.innerText = data.response;
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                })
+                .catch(err => {
+                    loadingDiv.innerText = "🤖 [AI Trợ Lý]: Gặp lỗi kết nối với máy chủ AI.";
+                    console.error(err);
+                });
+            }
+            
+            if (chatSend) {
+                chatSend.addEventListener('click', sendChatMessage);
+            }
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
     </script>
+
+    <!-- Chatbot AI Floating Widget -->
+    <div id="ai-chat-container" style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+        <button id="ai-chat-btn" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center pulse-primary" style="width: 60px; height: 60px; border: 2px solid rgba(255,255,255,0.2); background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
+            <i class="fa-solid fa-robot" style="font-size: 1.6rem;"></i>
+        </button>
+        
+        <div id="ai-chat-box" class="card shadow-2xl d-none" style="position: absolute; bottom: 80px; right: 0; width: 350px; height: 480px; background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; backdrop-filter: blur(25px); overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="card-header bg-primary bg-opacity-20 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-20 py-3 px-4" style="background: rgba(59, 130, 246, 0.1); display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div class="d-flex align-items-center" style="display: flex; align-items: center;">
+                    <div class="bg-success rounded-circle me-2 animate-pulse" style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; margin-right: 8px;"></div>
+                    <span class="fw-bold text-white small" style="color: white; font-weight: bold; font-size: 0.9rem;">AI Assistant Co-pilot</span>
+                </div>
+                <button type="button" id="ai-chat-close" class="btn-close btn-close-white" style="font-size: 0.8rem; background: none; border: none; color: white; cursor: pointer;">✕</button>
+            </div>
+            
+            <div id="ai-chat-body" class="card-body p-3 overflow-y-auto" style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow-y: auto; color: #cbd5e1; font-size: 0.85rem; height: calc(100% - 130px);">
+                <div class="bg-dark bg-opacity-40 p-3 rounded-4 text-white-50 small border border-secondary border-opacity-10 align-self-start" style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 12px; max-width: 80%; align-self: flex-start; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                    Xin chào! Tôi là AI Trợ Lý tích hợp. Hệ thống hiện đang an toàn. Bạn cần tôi phân tích số liệu hay hỗ trợ điều khiển thiết bị tự động không?
+                </div>
+            </div>
+            
+            <!-- Trả lời nhanh (Quick Suggestions) -->
+            <div class="p-2 border-top border-secondary border-opacity-20 d-flex flex-wrap gap-1 bg-dark bg-opacity-90" style="padding: 8px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); display: flex; flex-wrap: wrap; gap: 6px;">
+                <button onclick="sendQuickReply('Nhiệt độ hiện tại thế nào?')" class="btn btn-sm btn-outline-info rounded-pill py-0 px-2" style="font-size: 0.75rem; background: none; border: 1px solid #22d3ee; color: #22d3ee; padding: 2px 8px; border-radius: 12px; cursor: pointer;"><i class="fa-solid fa-temperature-half me-1"></i>Nhiệt độ</button>
+                <button onclick="sendQuickReply('Hệ thống có an toàn không?')" class="btn btn-sm btn-outline-success rounded-pill py-0 px-2" style="font-size: 0.75rem; background: none; border: 1px solid #34d399; color: #34d399; padding: 2px 8px; border-radius: 12px; cursor: pointer;"><i class="fa-solid fa-shield-halved me-1"></i>An toàn?</button>
+                <button onclick="sendQuickReply('Bật quạt gió làm mát')" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 0.75rem; background: none; border: 1px solid #fbbf24; color: #fbbf24; padding: 2px 8px; border-radius: 12px; cursor: pointer;"><i class="fa-solid fa-fan me-1"></i>Bật quạt</button>
+                <button onclick="sendQuickReply('Tắt nguồn thiết bị khẩn cấp')" class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2" style="font-size: 0.75rem; background: none; border: 1px solid #f87171; color: #f87171; padding: 2px 8px; border-radius: 12px; cursor: pointer;"><i class="fa-solid fa-power-off me-1"></i>Tắt nguồn</button>
+            </div>
+            
+            <div class="card-footer p-2 border-top border-secondary border-opacity-20 bg-dark bg-opacity-80" style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); display: flex;">
+                <input type="text" id="ai-chat-input" class="form-control bg-dark border-secondary border-opacity-30 text-white rounded-pill px-3 me-2" placeholder="Hỏi AI về hệ thống..." style="flex-grow: 1; font-size: 0.85rem; padding: 8px 12px; border-radius: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; outline: none; margin-right: 8px; width: calc(100% - 50px);">
+                <button id="ai-chat-send" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-paper-plane" style="font-size: 0.85rem;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,10 +1,14 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask_socketio import SocketIO, emit
 import datetime
 
 app = Flask(__name__)
 app.secret_key = 'aiot_super_secret_key_pro_max'
+socketio = SocketIO(app, cors_allowed_origins="*")
 DB_NAME = 'aiot.db'
+
+ai_autopilot_active = True
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -442,6 +446,16 @@ def receive_sensor_data():
             # Kiểm tra quy tắc tự động
             check_auto_rules(temperature, humidity, light)
             
+            # Nếu AI Autopilot đang bật và phát hiện nhiệt độ cao, tự động bật quạt gió hạ nhiệt
+            if ai_autopilot_active and temperature > 35:
+                conn_ap = sqlite3.connect(DB_NAME)
+                c_ap = conn_ap.cursor()
+                c_ap.execute("UPDATE device_state SET led_state = 1 WHERE device_id = 'led_4'")
+                c_ap.execute("INSERT INTO device_logs (action) VALUES (?)", ("AI Autopilot tự động kích hoạt quạt làm mát (led_4) do nhiệt độ vượt quá 35°C",))
+                conn_ap.commit()
+                conn_ap.close()
+                socketio.emit('ai_control_trigger', {'action': 'fan_on', 'pin': 4})
+            
             return jsonify({"status": "success", "ai_status": ai_status}), 201
             
         return jsonify({"status": "error", "message": "Invalid data"}), 400
@@ -744,5 +758,67 @@ def export_csv():
         headers={"Content-disposition": "attachment; filename=bao_cao_aiot.csv"}
     )
 
+# API AI Autopilot và AI Chat
+@app.route('/api/ai/autopilot', methods=['POST'])
+def toggle_autopilot():
+    global ai_autopilot_active
+    data = request.get_json()
+    ai_autopilot_active = data.get('active', True)
+    return jsonify({"active": ai_autopilot_active})
+    
+@app.route('/api/ai/autopilot/status', methods=['GET'])
+def autopilot_status():
+    global ai_autopilot_active
+    return jsonify({"active": ai_autopilot_active})
+
+@app.route('/api/ai/chat', methods=['POST'])
+def ai_chat():
+    data = request.get_json()
+    message = data.get('message', '')
+    msg = message.lower()
+    
+    # 1. Điều khiển qua đàm thoại
+    if "bật quạt" in msg or "làm mát" in msg:
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute("UPDATE device_state SET led_state = 1 WHERE device_id = 'led_4'")
+        c.execute("INSERT INTO device_logs (action) VALUES (?)", ("AI Trợ Lý bật quạt gió làm mát (led_4) theo lệnh đàm thoại",))
+        conn.commit()
+        conn.close()
+        
+        socketio.emit('ai_control_trigger', {'action': 'fan_on', 'pin': 4})
+        return jsonify({"response": "🤖 [AI Co-pilot]: Rõ! Đã tự động kích hoạt quạt thông gió làm mát (GPIO 4) theo lệnh của bạn. Hệ thống đang hạ nhiệt."})
+        
+    elif "tắt nguồn" in msg or "ngắt nguồn" in msg:
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute("UPDATE device_state SET led_state = 0 WHERE device_id = 'led_5'")
+        c.execute("INSERT INTO device_logs (action) VALUES (?)", ("AI Trợ Lý ngắt nguồn thiết bị (led_5) theo lệnh đàm thoại",))
+        conn.commit()
+        conn.close()
+        
+        socketio.emit('ai_control_trigger', {'action': 'power_off', 'pin': 5})
+        return jsonify({"response": "🤖 [AI Co-pilot]: Rõ! Đã phát sóng lệnh ngắt nguồn điện khẩn cấp thiết bị (GPIO 5). Trạng thái thiết bị hiện đang an toàn."})
+        
+    # 2. Phản hồi thông số Realtime
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT temperature, humidity, light, ai_status FROM sensor_data ORDER BY timestamp DESC LIMIT 1")
+    row = c.fetchone()
+    conn.close()
+    
+    if row:
+        temp, hum, light, status = row
+        if "nhiệt độ" in msg or "nhiet do" in msg:
+            return jsonify({"response": f"🤖 [AI Co-pilot]: Nhiệt độ môi trường đo được là {temp} °C."})
+        elif "độ ẩm" in msg or "do am" in msg:
+            return jsonify({"response": f"🤖 [AI Co-pilot]: Độ ẩm không khí là {hum} %."})
+        elif "ánh sáng" in msg or "anh sang" in msg:
+            return jsonify({"response": f"🤖 [AI Co-pilot]: Ánh sáng cảm biến ghi nhận được là {light or 0} %."})
+        elif "an toàn" in msg or "ổn định" in msg:
+            return jsonify({"response": f"🤖 [AI Co-pilot]: Đánh giá an toàn: {status or 'Bình thường'}."})
+            
+    return jsonify({"response": "🤖 [AI Co-pilot]: Xin chào! Tôi có thể giúp bạn kiểm tra nhiệt độ, độ ẩm hay ra lệnh 'Bật quạt gió làm mát' và 'Tắt nguồn thiết bị'."})
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True, allow_unsafe_werkzeug=True)

@@ -19,16 +19,21 @@ PASSWORD = "22222222"
 # ==========================================
 # THAY ĐỊA CHỈ NÀY BẰNG IP CỦA MÁY TÍNH CHẠY FLASK SERVER
 SERVER_IP = "10.11.168.207"
-SERVER_PORT = "5000"
+SERVER_PORT = "5001"
 BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 
 # ==========================================
 # CẤU HÌNH PHẦN CỨNG
 # ==========================================
-# LED cắm vào chân GPIO 4
-LED_PIN = 4
-led = machine.Pin(LED_PIN, machine.Pin.OUT)
-led.value(0)
+# Khởi tạo 8 LED
+LED_PINS = [4, 5, 6, 7, 15, 16, 17, 18]
+leds = {}
+for pin in LED_PINS:
+    try:
+        leds[pin] = machine.Pin(pin, machine.Pin.OUT)
+        leds[pin].value(0)
+    except Exception as e:
+        print("Lỗi khởi tạo LED ở chân GPIO", pin, e)
 
 # Cảm biến DHT11 cắm vào chân GPIO 14
 DHT_PIN = 14
@@ -108,10 +113,13 @@ def run_system():
                 data = res.json()
                 res.close()
                 
-                # Cập nhật đèn LED
-                state = data.get('state', 0)
-                led.value(state)
-                print(f"<- Trạng thái LED từ Server: {'BẬT' if state == 1 else 'TẮT'}")
+                # Cập nhật trạng thái cho từng đèn LED
+                for pin in LED_PINS:
+                    pin_str = str(pin)
+                    if pin_str in data and pin in leds:
+                        state = data[pin_str]
+                        leds[pin].value(state)
+                print(f"<- Đã cập nhật trạng thái 8 LED từ Server")
             except Exception as e:
                 print("<- Lỗi lấy trạng thái LED:", e)
                 
