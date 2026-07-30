@@ -12,23 +12,24 @@ except ImportError:
 # CẤU HÌNH WI-FI (ĐIỀN CHÍNH XÁC VỚI MẠCH)
 # ==========================================
 SSID = "Mmm"
+# Mật khẩu Wifi của bạn
 PASSWORD = "22222222"
 
 # ==========================================
 # CẤU HÌNH IP CỦA MÁY CHỦ FLASK
 # ==========================================
-# THAY ĐỊA CHỈ NÀY BẰNG IP CỦA MÁY TÍNH CHẠY FLASK SERVER
-SERVER_IP = "10.11.168.207"
+SERVER_IP = "10.10.9.224"
 SERVER_PORT = "5000"
 BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 
 # ==========================================
-# CẤU HÌNH PHẦN CỨNG
+# CẤU HÌNH PHẦN CỨNG (8 ĐÈN LED)
 # ==========================================
-# LED cắm vào chân GPIO 4
-LED_PIN = 4
-led = machine.Pin(LED_PIN, machine.Pin.OUT)
-led.value(0)
+LED_PINS = [4, 5, 6, 7, 15, 16, 17, 18]
+leds = {}
+for pin in LED_PINS:
+    leds[pin] = machine.Pin(pin, machine.Pin.OUT)
+    leds[pin].value(0)
 
 # Cảm biến DHT11 cắm vào chân GPIO 14
 DHT_PIN = 14
@@ -108,10 +109,11 @@ def run_system():
                 data = res.json()
                 res.close()
                 
-                # Cập nhật đèn LED
-                state = data.get('state', 0)
-                led.value(state)
-                print(f"<- Trạng thái LED từ Server: {'BẬT' if state == 1 else 'TẮT'}")
+                # Cập nhật cả 8 đèn LED
+                for pin in LED_PINS:
+                    state = data.get(str(pin), data.get(f"led_{pin}", 0))
+                    leds[pin].value(state)
+                print(f"<- Đã đồng bộ trạng thái 8 LED từ Server")
             except Exception as e:
                 print("<- Lỗi lấy trạng thái LED:", e)
                 
