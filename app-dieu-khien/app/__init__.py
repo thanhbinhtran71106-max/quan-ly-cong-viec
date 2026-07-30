@@ -15,7 +15,7 @@ def create_app(config_class=Config):
 
     # Register Blueprints here
     from app.iot import iot_bp
-    app.register_blueprint(iot_bp, url_prefix='/api/iot')
+    app.register_blueprint(iot_bp, url_prefix='/api')
     
     from app.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
