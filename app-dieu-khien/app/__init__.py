@@ -67,6 +67,7 @@ def create_app(config_class=Config):
 
         # Khởi tạo sẵn Cảm biến 1, 2 và 3 trong CSDL phục vụ cho bộ giả lập (Simulator)
         from app.sensor.services import SensorService
+        from app.iot.models import DeviceState
         sensor_service = SensorService()
         try:
             if not sensor_service.get_sensor(1):
@@ -93,8 +94,18 @@ def create_app(config_class=Config):
                     'pin_address': 'I2C 0x76',
                     'device_id': 2
                 })
+            
+            # Seeding DeviceState cho 8 LED và sensor_auto
+            for pin in [4, 5, 6, 7, 15, 16, 17, 18]:
+                led_id = f"led_{pin}"
+                if not DeviceState.query.filter_by(device_id=led_id).first():
+                    db.session.add(DeviceState(device_id=led_id, led_state=0))
+            if not DeviceState.query.filter_by(device_id='sensor_auto').first():
+                db.session.add(DeviceState(device_id='sensor_auto', led_state=1))
+            db.session.commit()
+            
         except Exception as e:
-            print(f"Error seeding sensors: {e}")
+            print(f"Error seeding sensors and device states: {e}")
 
         from app.iot.mqtt_service import MQTTService
         app.mqtt_service = MQTTService(app)

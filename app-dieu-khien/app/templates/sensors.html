@@ -145,6 +145,30 @@
                 <i class="fa-solid fa-paper-plane me-2"></i>Gửi Dữ Liệu Lên Server
             </button>
         </div>
+
+        <!-- Card Điều khiển 8 LED -->
+        <div class="stats-card mt-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-lightbulb me-2 text-warning"></i>Điều Khiển 8 LED</h5>
+            <p class="text-muted small mb-3">Bật/tắt 8 đèn LED trên thiết bị cảm biến và thay đổi chế độ tự động hóa.</p>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark bg-opacity-20 rounded-3" style="border: 1px solid rgba(255,255,255,0.05);">
+                <span class="small text-muted fw-semibold">Chế độ cảm biến (Auto)</span>
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" id="sensorAutoBtn" onchange="toggleSensorAuto(this)" checked style="cursor:pointer;">
+                </div>
+            </div>
+
+            <div class="row g-2">
+                {% for pin in [4, 5, 6, 7, 15, 16, 17, 18] %}
+                <div class="col-6 col-sm-3 col-lg-6">
+                    <button id="ledBtn-{{ pin }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="border-radius: 12px; font-size: 0.8rem;" onclick="toggleLED({{ pin }})">
+                        <span class="fw-semibold">LED {{ loop.index }}</span>
+                        <span class="text-muted" style="font-size: 0.65rem;">GPIO {{ pin }}</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -412,5 +436,90 @@
             }
         }
     });
+
+    // --- TÍNH NĂNG ĐIỀU KHIỂN 8 LED ---
+    async function fetchLedState() {
+        try {
+            const r = await fetch('/api/led');
+            const d = await r.json();
+            const pins = [4, 5, 6, 7, 15, 16, 17, 18];
+            pins.forEach(pin => {
+                const state = d['led_' + pin] !== undefined ? d['led_' + pin] : 0;
+                const btn = document.getElementById('ledBtn-' + pin);
+                if (btn) {
+                    if (state === 1) {
+                        btn.className = 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+                    } else {
+                        btn.className = 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+                    }
+                }
+            });
+            const autoState = d['sensor_auto'] !== undefined ? d['sensor_auto'] : 1;
+            document.getElementById('sensorAutoBtn').checked = (autoState === 1);
+        } catch(e) {
+            console.error("Lỗi đồng bộ trạng thái LED:", e);
+        }
+    }
+
+    async function toggleLED(pin) {
+        const btn = document.getElementById('ledBtn-' + pin);
+        const isCurrentlyOn = btn && btn.classList.contains('btn-success');
+        const newState = isCurrentlyOn ? 0 : 1;
+        
+        // Cập nhật UI tạm thời
+        if (btn) {
+            btn.className = newState === 1 
+                ? 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none' 
+                : 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+        }
+        
+        try {
+            await fetch('/api/led', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_id: 'led_' + pin, state: newState })
+            });
+        } catch(e) {
+            console.error("Lỗi điều khiển LED:", e);
+            // Hoàn tác UI nếu lỗi
+            if (btn) {
+                btn.className = isCurrentlyOn 
+                    ? 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none' 
+                    : 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+            }
+        }
+    }
+
+    async function toggleSensorAuto(el) {
+        const newState = el.checked ? 1 : 0;
+        try {
+            await fetch('/api/led', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_id: 'sensor_auto', state: newState })
+            });
+        } catch(e) {
+            console.error("Lỗi thay đổi chế độ tự động cảm biến:", e);
+            el.checked = !el.checked;
+        }
+    }
+
+    // Lắng nghe sự kiện AI kích hoạt bật/tắt thiết bị qua SocketIO để đồng bộ tức thời
+    socket.on('ai_control_trigger', function(data) {
+        console.log("🤖 [AI Socket Trigger] Đồng bộ thiết bị:", data);
+        const pin = data.pin;
+        const btn = document.getElementById('ledBtn-' + pin);
+        if (btn) {
+            if (data.action === 'fan_on') {
+                btn.className = 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+            } else if (data.action === 'power_off') {
+                btn.className = 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+            }
+        }
+    });
+
+    // Thêm vòng lặp kiểm tra trạng thái LED mỗi 3 giây
+    fetchLedState();
+    setInterval(fetchLedState, 3000);
 </script>
 {% endblock %}

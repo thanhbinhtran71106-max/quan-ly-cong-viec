@@ -42,3 +42,11 @@ class MqttTopic(db.Model):
     
     def to_dict(self):
         return {'id': self.id, 'topic': self.topic, 'direction': self.direction, 'qos': self.qos}
+
+class DeviceState(db.Model):
+    __tablename__ = 'device_state'
+    device_id = db.Column(db.String(50), primary_key=True)
+    led_state = db.Column(db.Integer, default=0)
+    
+    def to_dict(self):
+        return {'device_id': self.device_id, 'state': self.led_state}

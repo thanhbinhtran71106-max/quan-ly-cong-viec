@@ -54,3 +54,54 @@ def delete_device(device_id):
         return jsonify({'message': 'Đã xóa thiết bị thành công'}), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 404
+
+from app.iot.models import DeviceState
+from app import db
+
+@iot_bp.route('/led', methods=['POST'])
+def update_led_state():
+    try:
+        data = request.get_json()
+        device_id = data.get('device_id')
+        state = data.get('state')
+        
+        if device_id and state in [0, 1]:
+            led = DeviceState.query.filter_by(device_id=device_id).first()
+            if not led:
+                led = DeviceState(device_id=device_id, led_state=state)
+                db.session.add(led)
+            else:
+                led.led_state = state
+            db.session.commit()
+            
+            # Phát sóng socketio báo trạng thái đổi
+            from app import socketio
+            pin_num = 4
+            if '_' in device_id:
+                try:
+                    pin_num = int(device_id.split('_')[1])
+                except:
+                    pass
+            socketio.emit('ai_control_trigger', {
+                'action': 'fan_on' if state == 1 else 'power_off',
+                'pin': pin_num
+            })
+            
+            return jsonify({"status": "success", "message": f"{device_id} state updated to {state}"}), 200
+        return jsonify({"status": "error", "message": "Invalid params"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@iot_bp.route('/led', methods=['GET'])
+def get_led_state():
+    try:
+        rows = DeviceState.query.all()
+        res = {}
+        for r in rows:
+            res[r.device_id] = r.led_state
+            if r.device_id.startswith("led_"):
+                pin_num = r.device_id.split("_")[1]
+                res[pin_num] = r.led_state
+        return jsonify(res), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
