@@ -25,11 +25,15 @@ BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 # ==========================================
 # CẤU HÌNH PHẦN CỨNG (8 ĐÈN LED)
 # ==========================================
+# Nếu thiết bị của bạn là Active-Low (ghi 0 thì SÁNG, ghi 1 thì TẮT), hãy để True.
+# Nếu là Active-High (ghi 1 thì SÁNG, ghi 0 thì TẮT), hãy sửa lại thành False.
+ACTIVE_LOW = True
+
 LED_PINS = [4, 5, 6, 7, 15, 16, 17, 18]
 leds = {}
 for pin in LED_PINS:
     leds[pin] = machine.Pin(pin, machine.Pin.OUT)
-    leds[pin].value(0)
+    leds[pin].value(1 if ACTIVE_LOW else 0)
 
 # Cảm biến DHT11 cắm vào chân GPIO 14
 DHT_PIN = 14
@@ -109,10 +113,10 @@ def run_system():
                 data = res.json()
                 res.close()
                 
-                # Cập nhật cả 8 đèn LED
+                # Cập nhật cả 8 đèn LED (Có xử lý đảo logic Active-Low)
                 for pin in LED_PINS:
                     state = data.get(str(pin), data.get(f"led_{pin}", 0))
-                    leds[pin].value(state)
+                    leds[pin].value(1 - state if ACTIVE_LOW else state)
                 print(f"<- Đã đồng bộ trạng thái 8 LED từ Server")
             except Exception as e:
                 print("<- Lỗi lấy trạng thái LED:", e)
