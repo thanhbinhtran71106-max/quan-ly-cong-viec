@@ -126,6 +126,10 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    try:
+        c.execute("ALTER TABLE auto_rules ADD COLUMN pin_target INTEGER DEFAULT 4")
+    except Exception:
+        pass
     
     # Bảng Thông báo (Notifications)
     c.execute('''
@@ -149,6 +153,9 @@ def init_db():
                   ("Bat den khi toi", "light", "<", 20, "led", 1, "admin"))
     
     c.execute("INSERT OR IGNORE INTO device_state (device_id, led_state) VALUES ('esp32', 0)")
+    for pin in [4, 5, 6, 7, 15, 16, 17, 18]:
+        c.execute("INSERT OR IGNORE INTO device_state (device_id, led_state) VALUES (?, 0)", (f"led_{pin}",))
+    c.execute("INSERT OR IGNORE INTO device_state (device_id, led_state) VALUES ('sensor_auto', 1)")
     conn.commit()
     conn.close()
 
@@ -259,11 +266,19 @@ def analyze_anomaly(temp, hum, light=None):
 def check_auto_rules(temp, hum, light):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT * FROM auto_rules WHERE is_active = 1")
+    
+    # Kiểm tra xem chế độ cảm biến tự động có đang bật không
+    c.execute("SELECT led_state FROM device_state WHERE device_id = 'sensor_auto'")
+    row = c.fetchone()
+    if not row or row[0] == 0:
+        conn.close()
+        return
+        
+    c.execute("SELECT id, rule_name, sensor_type, condition, threshold, action_type, action_value, is_active, created_by, timestamp, pin_target FROM auto_rules WHERE is_active = 1")
     rules = c.fetchall()
     
     for rule in rules:
-        rule_id, rule_name, sensor_type, condition, threshold, action_type, action_value, is_active, created_by, ts = rule
+        rule_id, rule_name, sensor_type, condition, threshold, action_type, action_value, is_active, created_by, ts, pin_target = rule
         
         sensor_val = None
         if sensor_type == 'temperature':
@@ -289,14 +304,15 @@ def check_auto_rules(temp, hum, light):
             triggered = True
         
         if triggered and action_type == 'led':
-            c.execute("UPDATE device_state SET led_state = ? WHERE device_id = 'esp32'", (action_value,))
+            pin = pin_target if pin_target is not None else 4
+            c.execute("UPDATE device_state SET led_state = ? WHERE device_id = ?", (action_value, f"led_{pin}"))
             action_text = "BAT" if action_value == 1 else "TAT"
             c.execute("INSERT INTO device_logs (action) VALUES (?)", 
-                      (f"TU DONG {action_text} LED (Rule: {rule_name})",))
+                      (f"TU DONG {action_text} LED {pin} (Rule: {rule_name})",))
             # Thông báo
             c.execute("INSERT INTO notifications (title, message, type, username) VALUES (?, ?, ?, ?)",
                       (f"Tu dong hoa kich hoat",
-                       f"Quy tac '{rule_name}' da {action_text} LED (Gia tri: {sensor_val})",
+                       f"Quy tac '{rule_name}' da {action_text} LED {pin} (Gia tri: {sensor_val})",
                        "warning", "admin"))
     
     conn.commit()
@@ -449,24 +465,25 @@ def get_sensor_data():
 def update_led_state():
     try:
         data = request.get_json()
+        device_id = data.get('device_id') # e.g. "led_4" or "sensor_auto"
         state = data.get('state')
         
-        if state in [0, 1]:
+        if device_id and state in [0, 1]:
             conn = sqlite3.connect(DB_NAME)
             c = conn.cursor()
-            c.execute("UPDATE device_state SET led_state = ? WHERE device_id = 'esp32'", (state,))
+            c.execute("UPDATE device_state SET led_state = ? WHERE device_id = ?", (state, device_id))
             
-            action = "BAT DEN LED (Web)" if state == 1 else "TAT DEN LED (Web)"
+            action = f"Cap nhat {device_id} -> {state} (Web)"
             c.execute("INSERT INTO device_logs (action) VALUES (?)", (action,))
             
             if 'username' in session:
-                user_action = "Bat den" if state == 1 else "Tat den"
+                user_action = f"Thay doi {device_id} sang {'Bat' if state == 1 else 'Tat'}"
                 c.execute("INSERT INTO user_logs (username, action) VALUES (?, ?)", (session['username'], user_action))
             
             conn.commit()
             conn.close()
-            return jsonify({"status": "success", "message": f"LED state updated to {state}"}), 200
-        return jsonify({"status": "error", "message": "Invalid state"}), 400
+            return jsonify({"status": "success", "message": f"{device_id} state updated to {state}"}), 200
+        return jsonify({"status": "error", "message": "Invalid params"}), 400
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -474,13 +491,17 @@ def update_led_state():
 def get_led_state():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT led_state FROM device_state WHERE device_id = 'esp32'")
-    row = c.fetchone()
+    c.execute("SELECT device_id, led_state FROM device_state")
+    rows = c.fetchall()
     conn.close()
     
-    if row:
-        return jsonify({"state": row[0]}), 200
-    return jsonify({"state": 0}), 200
+    res = {}
+    for device_id, state in rows:
+        res[device_id] = state
+        if device_id.startswith("led_"):
+            pin_num = device_id.split("_")[1]
+            res[pin_num] = state
+    return jsonify(res), 200
 
 # API Logs
 @app.route('/api/logs', methods=['GET'])
@@ -596,15 +617,16 @@ def manage_auto_rules():
         threshold = data.get('threshold')
         action_type = data.get('action_type', 'led')
         action_value = data.get('action_value', 1)
+        pin_target = data.get('pin_target', 4) # Default to GPIO 4
         
         if not all([rule_name, sensor_type, condition, threshold is not None]):
             conn.close()
             return jsonify({"error": "Thieu thong tin"}), 400
         
-        c.execute("INSERT INTO auto_rules (rule_name, sensor_type, condition, threshold, action_type, action_value, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                  (rule_name, sensor_type, condition, threshold, action_type, action_value, session['username']))
+        c.execute("INSERT INTO auto_rules (rule_name, sensor_type, condition, threshold, action_type, action_value, created_by, pin_target) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                  (rule_name, sensor_type, condition, threshold, action_type, action_value, session['username'], pin_target))
         c.execute("INSERT INTO user_logs (username, action) VALUES (?, ?)",
-                  (session['username'], f"Tao quy tac tu dong: {rule_name}"))
+                  (session['username'], f"Tao quy tac tu dong: {rule_name} cho LED {pin_target}"))
         conn.commit()
         conn.close()
         return jsonify({"status": "success"}), 201
@@ -622,7 +644,7 @@ def manage_auto_rules():
         return jsonify({"status": "success"}), 200
     
     # GET
-    c.execute("SELECT id, rule_name, sensor_type, condition, threshold, action_type, action_value, is_active, created_by, timestamp FROM auto_rules ORDER BY timestamp DESC")
+    c.execute("SELECT id, rule_name, sensor_type, condition, threshold, action_type, action_value, is_active, created_by, timestamp, pin_target FROM auto_rules ORDER BY timestamp DESC")
     rows = c.fetchall()
     conn.close()
     
@@ -632,7 +654,7 @@ def manage_auto_rules():
         rules.append({
             "id": r[0], "name": r[1], "sensor": r[2], "sensor_label": sensor_labels.get(r[2], r[2]),
             "condition": r[3], "threshold": r[4], "action_type": r[5], "action_value": r[6],
-            "is_active": r[7], "created_by": r[8], "timestamp": r[9]
+            "is_active": r[7], "created_by": r[8], "timestamp": r[9], "pin_target": r[10] or 4
         })
     return jsonify(rules), 200
 
