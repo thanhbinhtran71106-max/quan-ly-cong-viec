@@ -22,12 +22,6 @@ Phần mềm Web giúp trưởng bộ phận phân công công việc cho nhân 
 3. Mở trình duyệt và truy cập:
    [http://localhost:5000](http://localhost:5000)
 
-## Chức năng (Sprint 1)
-- [x] Thiết lập cấu trúc dự án Flask
-- [x] Thiết kế Database (Employee, Task, Schedule)
-- [x] Giao diện Dashboard cơ bản với Sidebar & Header
-- [x] Kết nối SQLite bằng SQLAlchemy
-
 ## Thông tin nhóm
 - [@thanhbinhtran71106-max](https://github.com/thanhbinhtran71106-max) (Trần Thanh Bình)
 - [@minhthiennguyen06-hash](https://github.com/minhthiennguyen06-hash) (Minh Thiện)
