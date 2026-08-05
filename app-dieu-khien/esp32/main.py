@@ -11,14 +11,14 @@ except ImportError:
 # ==========================================
 # CẤU HÌNH WI-FI (ĐIỀN CHÍNH XÁC VỚI MẠCH)
 # ==========================================
-SSID = "Mmm"
+SSID = "MT"
 # Mật khẩu Wifi của bạn
-PASSWORD = "22222222"
+PASSWORD = "12345678"
 
 # ==========================================
 # CẤU HÌNH IP CỦA MÁY CHỦ FLASK
 # ==========================================
-SERVER_IP = "10.10.9.224"
+SERVER_IP = "172.20.10.7"
 SERVER_PORT = "5000"
 BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 

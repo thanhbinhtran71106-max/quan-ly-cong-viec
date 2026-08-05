@@ -37,6 +37,10 @@
                             <i class="fa-solid fa-chart-pie"></i>
                             <span>Dashboard</span>
                         </a>
+                        <a class="nav-link {% if request.path == '/radar' %}active{% endif %}" href="{{ url_for('dashboard.radar') }}">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                            <span>Radar Cảm Biến</span>
+                        </a>
                     </nav>
 
                     <div class="nav-section-title">Chức Năng Chính</div>

@@ -25,6 +25,10 @@ def seed_sample_data():
         db.session.add_all([t1, t2, t3, t4])
         db.session.commit()
 
+@bp.route('/radar')
+def radar():
+    return render_template('dashboard/radar.html')
+
 @bp.route('/')
 @bp.route('/dashboard')
 def index():
