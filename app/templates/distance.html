@@ -3,10 +3,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Đo Khoảng Cách (HC-SR04)</h2>
-        <p class="text-muted mb-0">Giám sát khoảng cách thời gian thực sử dụng cảm biến siêu âm HC-SR04</p>
+        <h2 class="fw-bold mb-1 glitch-title">Đo Khoảng Cách (HC-SR04)</h2>
+        <p class="text-muted mb-0 small">Giám sát khoảng cách thời gian thực sử dụng cảm biến siêu âm HC-SR04 chân GPIO 12/13</p>
     </div>
-    <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm pulse-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+    <button class="btn btn-outline-primary rounded-pill px-4 py-2 pulse-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
         <i class="fa-solid fa-plus me-2"></i>Thêm Thiết Bị
     </button>
 </div>
@@ -16,18 +16,22 @@
     <!-- Realtime Gauge Card (col-lg-4) -->
     <div class="col-lg-4">
         <div class="stats-card h-100 text-center d-flex flex-column align-items-center justify-content-between py-4">
-            <h5 class="fw-bold mb-3 text-start w-100"><i class="fa-solid fa-ruler me-2 text-primary"></i>Khoảng Cách Hiện Tại</h5>
+            <h5 class="fw-bold mb-3 text-start w-100"><i class="fa-solid fa-ruler me-2 text-primary"></i>Radar HUD Khoảng Cách</h5>
             
-            <!-- Distance Value Display -->
+            <!-- Distance Circular Gauge -->
             <div class="my-4 position-relative d-inline-block">
-                <div class="stats-icon bg-primary bg-opacity-10 text-primary border-primary border-opacity-20 mx-auto" style="width: 150px; height: 150px; border-radius: 50%; font-size: 2.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <span id="currentDistanceText" class="fw-bold font-monospace text-primary" style="font-size: 2.8rem; line-height: 1;">--</span>
-                    <span class="text-muted small mt-1" style="font-size: 0.9rem;">cm</span>
+                <div class="gauge-outer" style="width: 180px; height: 180px;">
+                    <svg viewBox="0 0 100 100" class="gauge-canvas" style="transform: rotate(-90deg); width: 100%; height: 100%;">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6" />
+                        <circle id="distance-gauge-circle" cx="50" cy="50" r="40" fill="none" stroke="#00f0ff" stroke-width="6" 
+                                stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" style="transition: stroke-dashoffset 0.5s ease;" />
+                    </svg>
+                    <div class="gauge-value" id="currentDistanceText" style="font-size: 2.3rem; font-family: 'Share Tech Mono', monospace;">--</div>
                 </div>
             </div>
 
             <!-- Distance Range Alert Status -->
-            <div id="distanceAlertStatus" class="alert alert-info border-info border-opacity-20 bg-info bg-opacity-5 p-2 rounded-3 w-100 mb-0">
+            <div id="distanceAlertStatus" class="alert alert-info border-info border-opacity-20 bg-info bg-opacity-5 p-2 rounded-3 w-100 mb-0 font-monospace" style="font-size: 0.8rem;">
                 <i class="fa-solid fa-circle-info me-2"></i>Đang chờ dữ liệu...
             </div>
         </div>
@@ -38,11 +42,11 @@
         <div class="chart-container h-100">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold mb-0">
-                    <i class="fa-solid fa-chart-line-up-down me-2 text-primary"></i>Biểu Đồ Lịch Sử Khoảng Cách
+                    <i class="fa-solid fa-chart-line-up-down me-2 text-primary"></i>Biểu Đồ Sóng Siêu Âm Echo
                 </h5>
-                <span class="badge bg-success rounded-pill px-3 py-2">Thời gian thực (Real-time)</span>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-30 px-3 py-1 font-monospace" style="font-size: 0.75rem;">LIVE_FEED_ON</span>
             </div>
-            <canvas id="distanceRealtimeChart" height="150"></canvas>
+            <canvas id="distanceRealtimeChart" height="135"></canvas>
         </div>
     </div>
 </div>
@@ -52,7 +56,7 @@
     <!-- Sensor Table (col-lg-12) -->
     <div class="col-lg-12">
         <div class="stats-card h-100">
-            <h5 class="fw-bold mb-4"><i class="fa-solid fa-circle-info me-2 text-primary"></i>Thông Tin Cảm Biến</h5>
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-circle-info me-2 text-primary"></i>Thông Tin Chi Tiết Cảm Biến</h5>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead>
@@ -62,9 +66,9 @@
                             <th>Loại</th>
                             <th>Địa chỉ Pin</th>
                             <th>Hiệu chuẩn</th>
-                            <th>Giá trị gần nhất</th>
+                            <th>Chỉ số thực</th>
                             <th>Trạng thái</th>
-                            <th>Thao tác</th>
+                            <th class="text-end">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,12 +78,15 @@
                                 <i class="fa-solid fa-ruler-horizontal text-primary me-2"></i>HC-SR04 - Khoảng Cách
                             </td>
                             <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-2">Distance</span></td>
-                            <td>Trig=GPIO12, Echo=GPIO13</td>
+                            <td class="font-monospace">Trig=GPIO12, Echo=GPIO13</td>
                             <td class="text-muted font-monospace">+0.0 cm</td>
-                            <td class="fw-bold text-primary" id="latestDistanceVal">-- cm</td>
+                            <td class="fw-bold text-primary custom-lcd-font" id="latestDistanceVal">-- cm</td>
                             <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3">Active</span></td>
-                            <td>
-                                <a href="/api/sensors/4/export" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fa-solid fa-file-csv me-1"></i>Xuất CSV</a>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <a href="/api/sensors/4/export" class="btn btn-sm btn-outline-info rounded-start-pill px-3"><i class="fa-solid fa-file-csv me-1"></i>CSV</a>
+                                    <button onclick="exportToExcel(4, 'HC-SR04_Khoảng_Cách')" class="btn btn-sm btn-outline-primary rounded-end-pill px-3"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -94,28 +101,42 @@
 <script>
     const socket = io();
 
+    // Cập nhật vòng đo Radar Gauge tròn
+    function updateDistanceGauge(val) {
+        const circle = document.getElementById('distance-gauge-circle');
+        const text = document.getElementById('currentDistanceText');
+        if (circle && text) {
+            // Chu vi hình tròn r=40 là 251.2
+            // HC-SR04 đo tối đa khoảng 400cm
+            const percent = Math.min(100, Math.max(0, (val / 400.0) * 100));
+            const offset = 251.2 - (percent / 100) * 251.2;
+            circle.style.strokeDashoffset = offset;
+            text.innerText = val.toFixed(1) + ' cm';
+        }
+    }
+
     // Khởi tạo đồ thị Line Chart
     const ctxDistance = document.getElementById('distanceRealtimeChart').getContext('2d');
     
-    let distGradient = ctxDistance.createLinearGradient(0, 0, 0, 300);
-    distGradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
-    distGradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+    let distGradient = ctxDistance.createLinearGradient(0, 0, 0, 200);
+    distGradient.addColorStop(0, 'rgba(0, 240, 255, 0.3)');
+    distGradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
 
     const chart = new Chart(ctxDistance, {
         type: 'line',
         data: {
-            labels: ['--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--'],
+            labels: ['--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--'],
             datasets: [
                 {
                     label: 'Khoảng cách (cm)',
-                    data: [0, 0, 0, 0, 0, 0, 0],
-                    borderColor: '#3b82f6',
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    borderColor: '#00f0ff',
                     backgroundColor: distGradient,
                     fill: true,
                     tension: 0.4,
-                    borderWidth: 3,
+                    borderWidth: 2,
                     pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#3b82f6'
+                    pointBorderColor: '#00f0ff'
                 }
             ]
         },
@@ -124,25 +145,18 @@
             plugins: { 
                 legend: { 
                     position: 'top',
-                    labels: { color: '#f4f4f5' }
-                },
-                tooltip: {
-                    backgroundColor: '#18181b',
-                    titleColor: '#fff',
-                    bodyColor: '#a1a1aa',
-                    borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 1
+                    labels: { color: '#e2e8f0', font: { family: 'Orbitron' } }
                 }
             },
             scales: {
                 y: { 
-                    beginAtZero: true, 
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#a1a1aa' }
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 240, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: 'Share Tech Mono' } }
                 },
                 x: { 
                     grid: { display: false },
-                    ticks: { color: '#a1a1aa' }
+                    ticks: { color: '#64748b', font: { family: 'Share Tech Mono' } }
                 }
             }
         }
@@ -152,14 +166,14 @@
         const alertStatus = document.getElementById('distanceAlertStatus');
         if (alertStatus) {
             if (val < 10) {
-                alertStatus.className = "alert alert-danger border-danger border-opacity-20 bg-danger bg-opacity-5 p-2 rounded-3 w-100 mb-0";
-                alertStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger me-2 fa-fade"></i>Cảnh báo: Vật cản quá gần! (${val} cm)`;
+                alertStatus.className = "alert alert-danger border-danger border-opacity-30 bg-danger bg-opacity-5 p-2 rounded-3 w-100 mb-0 text-danger";
+                alertStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation fa-fade me-2"></i>BÁO ĐỘNG: Vật cản quá gần! (${val} cm)`;
             } else if (val < 30) {
-                alertStatus.className = "alert alert-warning border-warning border-opacity-20 bg-warning bg-opacity-5 p-2 rounded-3 w-100 mb-0";
-                alertStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation text-warning me-2"></i>Chú ý: Vật cản đến gần (${val} cm)`;
+                alertStatus.className = "alert alert-warning border-warning border-opacity-30 bg-warning bg-opacity-5 p-2 rounded-3 w-100 mb-0 text-warning";
+                alertStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation me-2"></i>CẢNH BÁO: Chú ý vật cản (${val} cm)`;
             } else {
-                alertStatus.className = "alert alert-success border-success border-opacity-20 bg-success bg-opacity-5 p-2 rounded-3 w-100 mb-0";
-                alertStatus.innerHTML = `<i class="fa-solid fa-circle-check text-success me-2"></i>An toàn: Khoảng cách thông thoáng (${val} cm)`;
+                alertStatus.className = "alert alert-success border-success border-opacity-30 bg-success bg-opacity-5 p-2 rounded-3 w-100 mb-0 text-success";
+                alertStatus.innerHTML = `<i class="fa-solid fa-circle-check me-2"></i>HỆ THỐNG AN TOÀN: Thông thoáng (${val} cm)`;
             }
         }
     }
@@ -172,26 +186,15 @@
         const val = data.value;
         const sensorId = data.sensor_id;
 
-        // Cập nhật Cảm biến Khoảng Cách (ID = 4)
         if (sensorId === 4) {
-            // Cập nhật text giá trị
-            const textDisplay = document.getElementById('currentDistanceText');
-            if (textDisplay) textDisplay.innerText = val;
+            // Cập nhật Gauge tròn & Text
+            updateDistanceGauge(val);
 
             const latestCell = document.getElementById('latestDistanceVal');
             if (latestCell) latestCell.innerText = val + ' cm';
 
-            // Hiển thị trạng thái cảnh báo dựa trên khoảng cách
             updateAlertStatus(val);
 
-            // Hiệu ứng nháy dòng bảng
-            const row = document.getElementById('sensor-row-4');
-            if (row) {
-                row.classList.remove('flash-blue');
-                void row.offsetWidth; // Restart animation
-                row.classList.add('flash-blue');
-            }
-            
             // Cập nhật biểu đồ
             if (chart.data.labels[0] === '--:--') {
                 chart.data.labels = [time];
@@ -216,13 +219,11 @@
             .then(data => {
                 if (data.latest_value !== null && data.latest_value !== undefined) {
                     const val = data.latest_value;
-                    const textDisplay = document.getElementById('currentDistanceText');
-                    if (textDisplay) textDisplay.innerText = val;
-
+                    updateDistanceGauge(val);
+                    updateAlertStatus(val);
+                    
                     const latestCell = document.getElementById('latestDistanceVal');
                     if (latestCell) latestCell.innerText = val + ' cm';
-
-                    updateAlertStatus(val);
                 }
             });
 
@@ -238,17 +239,49 @@
             });
     });
 
-    // Thêm CSS hiệu ứng nháy dòng khi có data
-    const style = document.createElement('style');
-    style.innerHTML = `
-        @keyframes flashBlueRow {
-            0% { background: rgba(59, 130, 246, 0.2); }
-            100% { background: transparent; }
+    // --- TÍNH NĂNG XUẤT EXCEL (SHEETJS) ---
+    function exportToExcel(sensorId, sensorName) {
+        const btn = document.querySelector(`#sensor-row-${sensorId} td:last-child button`);
+        const originalText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Đang tải...';
+            btn.disabled = true;
         }
-        .flash-blue {
-            animation: flashBlueRow 0.8s ease-out;
-        }
-    `;
-    document.head.appendChild(style);
+        
+        fetch(`/api/sensors/${sensorId}/chart?limit=1000`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.labels || !data.values || data.labels.length === 0) {
+                    alert("Không có dữ liệu lịch sử để xuất Excel!");
+                    return;
+                }
+                
+                let excelRows = [];
+                for (let i = 0; i < data.labels.length; i++) {
+                    excelRows.push({
+                        "STT": i + 1,
+                        "Cảm biến": sensorName.replace(/_/g, ' '),
+                        "Thời gian đo": data.labels[i],
+                        "Giá trị (cm)": data.values[i]
+                    });
+                }
+                
+                const worksheet = XLSX.utils.json_to_sheet(excelRows);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Data Log");
+                
+                XLSX.writeFile(workbook, `${sensorName}_data.xlsx`);
+            })
+            .catch(err => {
+                console.error("Lỗi xuất Excel:", err);
+                alert("Gặp lỗi trong quá trình xuất dữ liệu Excel.");
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            });
+    }
 </script>
 {% endblock %}

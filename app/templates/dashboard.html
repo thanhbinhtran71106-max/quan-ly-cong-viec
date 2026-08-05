@@ -3,10 +3,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Hệ Thống AIoT Core</h2>
-        <p class="text-muted mb-0">Theo dõi thông số thời gian thực và quản trị thiết bị doanh nghiệp</p>
+        <h2 class="fw-bold mb-1 glitch-title">App Điều Khiển</h2>
+        <p class="text-muted mb-0 small">Bảng tuần tra kỹ thuật số và quản trị thiết bị</p>
     </div>
-    <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm pulse-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+    <button class="btn btn-outline-primary rounded-pill px-4 py-2 pulse-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
         <i class="fa-solid fa-plus me-2"></i>Thêm Thiết Bị
     </button>
 </div>
@@ -15,12 +15,12 @@
 <div class="row g-4">
     <!-- Card 1 -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card card-total d-flex align-items-center justify-content-between">
+        <div class="stats-card card-total d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--primary);">
             <div>
-                <p class="text-muted mb-1 fw-semibold">Tổng thiết bị</p>
-                <h3 class="mb-0 fw-bold">{{ stats.total_devices }}</h3>
+                <p class="text-muted mb-1 small fw-semibold text-uppercase font-monospace">Tổng thiết bị</p>
+                <h3 class="mb-0 fw-bold custom-lcd-font">{{ stats.total_devices }}</h3>
             </div>
-            <div class="stats-icon icon-blue">
+            <div class="stats-icon text-primary bg-primary bg-opacity-10 border-0" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
                 <i class="fa-solid fa-network-wired"></i>
             </div>
         </div>
@@ -28,12 +28,12 @@
     
     <!-- Card 2 -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card card-active d-flex align-items-center justify-content-between">
+        <div class="stats-card card-active d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--success);">
             <div>
-                <p class="text-muted mb-1 fw-semibold">Đang hoạt động</p>
-                <h3 class="mb-0 fw-bold">{{ stats.active_devices }}</h3>
+                <p class="text-muted mb-1 small fw-semibold text-uppercase font-monospace">Đang hoạt động</p>
+                <h3 class="mb-0 fw-bold custom-lcd-font text-success">{{ stats.active_devices }}</h3>
             </div>
-            <div class="stats-icon icon-green">
+            <div class="stats-icon text-success bg-success bg-opacity-10 border-0" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
                 <i class="fa-solid fa-bolt"></i>
             </div>
         </div>
@@ -41,12 +41,12 @@
 
     <!-- Card 3 -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card card-offline d-flex align-items-center justify-content-between">
+        <div class="stats-card card-offline d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--danger);">
             <div>
-                <p class="text-muted mb-1 fw-semibold">Ngoại tuyến</p>
-                <h3 class="mb-0 fw-bold text-danger">{{ stats.offline_devices }}</h3>
+                <p class="text-muted mb-1 small fw-semibold text-uppercase font-monospace">Ngoại tuyến</p>
+                <h3 class="mb-0 fw-bold custom-lcd-font text-danger">{{ stats.offline_devices }}</h3>
             </div>
-            <div class="stats-icon icon-red">
+            <div class="stats-icon text-danger bg-danger bg-opacity-10 border-0" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
                 <i class="fa-solid fa-power-off"></i>
             </div>
         </div>
@@ -54,12 +54,12 @@
 
     <!-- Card 4 -->
     <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card card-alerts d-flex align-items-center justify-content-between">
+        <div class="stats-card card-alerts d-flex align-items-center justify-content-between" style="border-left: 3px solid var(--warning);">
             <div>
-                <p class="text-muted mb-1 fw-semibold">Cảnh báo hệ thống</p>
-                <h3 class="mb-0 fw-bold text-warning">{{ stats.alerts }}</h3>
+                <p class="text-muted mb-1 small fw-semibold text-uppercase font-monospace">Cảnh báo hệ thống</p>
+                <h3 class="mb-0 fw-bold custom-lcd-font text-warning">{{ stats.alerts }}</h3>
             </div>
-            <div class="stats-icon icon-yellow">
+            <div class="stats-icon text-warning bg-warning bg-opacity-10 border-0" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
         </div>
@@ -70,13 +70,13 @@
 <div class="row mt-2 g-4">
     <div class="col-lg-8">
         <div class="chart-container">
-            <h5 class="fw-bold mb-4"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Lưu Lượng Dữ Liệu (7 ngày qua)</h5>
+            <h5 class="fw-bold mb-4 font-monospace"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Lưu Lượng Truyền Dẫn Dữ Liệu</h5>
             <canvas id="trafficChart" height="110"></canvas>
         </div>
     </div>
     <div class="col-lg-4">
         <div class="chart-container h-100">
-            <h5 class="fw-bold mb-4"><i class="fa-solid fa-pie-chart me-2 text-primary"></i>Tỉ Lệ Thiết Bị</h5>
+            <h5 class="fw-bold mb-4 font-monospace"><i class="fa-solid fa-pie-chart me-2 text-primary"></i>Tỉ Lệ Thiết Bị Định Danh</h5>
             <div style="position: relative; height:220px;">
                 <canvas id="typeChart"></canvas>
             </div>
@@ -89,27 +89,27 @@
 <script>
     // Line Chart - Traffic
     const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
-    let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+    let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(0, 240, 255, 0.3)');
+    gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
 
     new Chart(ctxTraffic, {
         type: 'line',
         data: {
             labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ Bảy', 'Chủ Nhật'],
             datasets: [{
-                label: 'Gói tin gửi lên (k)',
+                label: 'Gói tin truyền dẫn (k)',
                 data: [12, 19, 15, 25, 22, 30, 28],
-                borderColor: '#6366f1',
+                borderColor: '#00f0ff',
                 backgroundColor: gradient,
-                borderWidth: 3,
+                borderWidth: 2,
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#6366f1',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
+                pointBorderColor: '#00f0ff',
+                pointBorderWidth: 1,
+                pointRadius: 3,
+                pointHoverRadius: 5
             }]
         },
         options: {
@@ -126,13 +126,12 @@
             },
             scales: {
                 y: { 
-                    beginAtZero: true, 
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#a1a1aa' }
+                    grid: { color: 'rgba(0, 240, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { family: 'Share Tech Mono' } }
                 },
                 x: { 
                     grid: { display: false },
-                    ticks: { color: '#a1a1aa' }
+                    ticks: { color: '#64748b', font: { family: 'Share Tech Mono' } }
                 }
             }
         }
@@ -146,7 +145,7 @@
             labels: ['ESP32', 'STM32', 'PLC', 'Camera AI'],
             datasets: [{
                 data: [45, 25, 20, 10],
-                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444'],
+                backgroundColor: ['#00f0ff', '#39ff14', '#ffaa00', '#ff003c'],
                 borderWidth: 0,
                 hoverOffset: 6
             }]
@@ -157,7 +156,7 @@
             plugins: {
                 legend: { 
                     position: 'bottom',
-                    labels: { color: '#f4f4f5', padding: 15 }
+                    labels: { color: '#e2e8f0', padding: 15, font: { family: 'Orbitron', size: 10 } }
                 }
             },
             cutout: '72%'

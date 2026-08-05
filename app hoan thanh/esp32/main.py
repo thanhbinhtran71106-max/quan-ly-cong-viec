@@ -18,7 +18,7 @@ PASSWORD = "22222222"
 # ==========================================
 # CẤU HÌNH IP CỦA MÁY CHỦ FLASK
 # ==========================================
-SERVER_IP = "10.236.106.207"
+SERVER_IP = "10.10.9.224"
 SERVER_PORT = "5000"
 BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 

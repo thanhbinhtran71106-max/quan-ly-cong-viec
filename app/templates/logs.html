@@ -3,15 +3,15 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Nhật Ký Hệ Thống</h2>
-        <p class="text-muted mb-0">Theo dõi lịch sử hoạt động và các thao tác quản trị viên</p>
+        <h2 class="fw-bold mb-1 glitch-title">Nhật Ký Hoạt Động</h2>
+        <p class="text-muted mb-0 small">Theo dõi lịch sử hoạt động và các thao tác điều khiển thiết bị</p>
     </div>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-12">
         <div class="stats-card">
-            <h5 class="fw-bold mb-4"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Hoạt động gần đây</h5>
+            <h5 class="fw-bold mb-4 font-monospace"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Hoạt động gần đây</h5>
             
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -30,7 +30,7 @@
                         <tr>
                             <td class="text-muted">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td class="fw-bold"><i class="fa-solid fa-user me-2 text-primary"></i>{{ log.user.username if log.user else 'Hệ thống' }}</td>
-                            <td class="text-white-50 small">{{ log.user.email if log.user and log.user.email else 'system@aiot.com' }}</td>
+                            <td class="text-white-50 small">{{ log.user.email if log.user and log.user.email else 'system@dieukhien.com' }}</td>
                             <td>
                                 {% if "Thất Bại" in log.action or "Xóa" in log.action %}
                                 <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 px-3 py-2">{{ log.action }}</span>
