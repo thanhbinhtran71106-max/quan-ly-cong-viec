@@ -29,4 +29,6 @@ Phần mềm Web giúp trưởng bộ phận phân công công việc cho nhân 
 - [x] Kết nối SQLite bằng SQLAlchemy
 
 ## Thông tin nhóm
-(Ghi tên các thành viên vào đây)
+- [@thanhbinhtran71106-max](https://github.com/thanhbinhtran71106-max) (Trần Thanh Bình)
+- [@minhthiennguyen06-hash](https://github.com/minhthiennguyen06-hash) (Minh Thiện)
+- [@NXThanh1501](https://github.com/NXThanh1501)
