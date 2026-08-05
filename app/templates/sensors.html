@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Quản Lý Cảm Biến</h2>
+        <p class="text-muted mb-0">Giám sát các chỉ số cảm biến thời gian thực và giả lập thiết bị</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm pulse-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+        <i class="fa-solid fa-plus me-2"></i>Thêm Thiết Bị
+    </button>
+</div>
+
+<!-- Realtime Chart Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="chart-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">
+                    <i class="fa-solid fa-wave-square me-2 text-primary"></i>Đồ Thị Dữ Liệu Cảm Biến Telemetry
+                </h5>
+                <span class="badge bg-success rounded-pill px-3 py-2">Thời gian thực (Real-time)</span>
+            </div>
+            <canvas id="sensorRealtimeChart" height="90"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Main Panels Row -->
+<div class="row g-4">
+    <!-- Left: Sensor Table (col-lg-8) -->
+    <div class="col-lg-8">
+        <div class="stats-card h-100">
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-list me-2 text-primary"></i>Danh Sách Cảm Biến</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Cảm Biến</th>
+                            <th>Loại</th>
+                            <th>Địa chỉ Pin</th>
+                            <th>Hiệu chuẩn sai số</th>
+                            <th>Giá trị gần nhất</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="sensor-row-1">
+                            <td>1</td>
+                            <td class="fw-bold text-nowrap">
+                                <i class="fa-solid fa-thermometer text-danger me-2"></i>DHT22 - Nhiệt Độ
+                            </td>
+                            <td><span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 px-3 py-2">Temperature</span></td>
+                            <td>GPIO14</td>
+                            <td class="text-muted font-monospace">+0.0 °C</td>
+                            <td class="fw-bold text-danger">42.5 °C</td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3">Active</span></td>
+                            <td>
+                                <a href="/api/sensors/1/export" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fa-solid fa-file-csv me-1"></i>Xuất CSV</a>
+                            </td>
+                        </tr>
+                        <tr id="sensor-row-2">
+                            <td>2</td>
+                            <td class="fw-bold text-nowrap">
+                                <i class="fa-solid fa-droplet text-primary me-2"></i>DHT22 - Độ Ẩm
+                            </td>
+                            <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-2">Humidity</span></td>
+                            <td>GPIO14</td>
+                            <td class="text-muted font-monospace">+0.0 %</td>
+                            <td class="fw-bold text-primary">65 %</td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3">Active</span></td>
+                            <td>
+                                <a href="/api/sensors/2/export" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fa-solid fa-file-csv me-1"></i>Xuất CSV</a>
+                            </td>
+                        </tr>
+                        <tr id="sensor-row-3">
+                            <td>3</td>
+                            <td class="fw-bold text-nowrap">
+                                <i class="fa-solid fa-gauge text-warning me-2"></i>BMP280 - Áp Suất
+                            </td>
+                            <td><span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 px-3 py-2">Pressure</span></td>
+                            <td>I2C 0x76</td>
+                            <td class="text-muted font-monospace">+0.0 hPa</td>
+                            <td class="fw-bold text-warning">1013.25 hPa</td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3">Active</span></td>
+                            <td>
+                                <a href="/api/sensors/3/export" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fa-solid fa-file-csv me-1"></i>Xuất CSV</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Simulation Control & Device Image (col-lg-4) -->
+    <div class="col-lg-4">
+        <!-- Image Card -->
+        <div class="stats-card mb-4 text-center">
+            <h6 class="fw-bold mb-3 text-start"><i class="fa-solid fa-microchip me-2 text-primary"></i>Thiết Bị Cảm Biến (Mô Phỏng)</h6>
+            <img src="{{ url_for('static', filename='images/sensor_node.jpg') }}" alt="IoT Sensor Node" class="img-fluid rounded-3 shadow-lg border border-secondary border-opacity-20" style="max-height: 180px; object-fit: cover;">
+            <p class="text-muted small mt-2 mb-0">Nốt Cảm Biến AIoT Thông Minh (ESP32 Node)</p>
+        </div>
+
+        <!-- Simulator Panel Card -->
+        <div class="stats-card">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-sliders me-2 text-primary"></i>Giả Lập Số Liệu Ảo</h5>
+            <p class="text-muted small mb-4">Thay đổi thanh trượt bên dưới để tự động cập nhật số liệu thời gian thực lên Dashboard CSDL.</p>
+            
+            <!-- Temp Slider -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <label class="small text-muted fw-semibold">Nhiệt độ phòng (°C)</label>
+                    <span id="tempVal" class="badge bg-danger rounded-pill px-2">28.5 °C</span>
+                </div>
+                <input type="range" class="form-range" id="tempSlider" min="15" max="45" step="0.5" value="28.5">
+            </div>
+
+            <!-- Humid Slider -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <label class="small text-muted fw-semibold">Độ ẩm không khí (%)</label>
+                    <span id="humidVal" class="badge bg-primary rounded-pill px-2">65.0 %</span>
+                </div>
+                <input type="range" class="form-range" id="humidSlider" min="20" max="100" step="1" value="65">
+            </div>
+
+            <!-- Tự động chạy giả lập -->
+            <div class="form-check form-switch mb-3 text-start">
+                <input class="form-check-input" type="checkbox" id="autoSimulateSwitch">
+                <label class="form-check-label small text-muted fw-semibold" for="autoSimulateSwitch">Chạy giả lập tự động liên tục (2 giây)</label>
+            </div>
+
+            <!-- Kích hoạt AI Autopilot -->
+            <div class="form-check form-switch mb-3 text-start border border-success border-opacity-10 bg-success bg-opacity-5 p-2 rounded-3">
+                <input class="form-check-input ms-0" type="checkbox" id="aiAutopilotSwitch" style="cursor:pointer;">
+                <label class="form-check-label small text-success fw-bold ps-2" for="aiAutopilotSwitch" style="cursor:pointer;">
+                    <i class="fa-solid fa-robot fa-bounce me-1"></i>Bật AI Autopilot (Tự động hạ nhiệt)
+                </label>
+            </div>
+
+            <button onclick="sendSimulatedData()" class="btn btn-primary w-100 py-2 rounded-pill">
+                <i class="fa-solid fa-paper-plane me-2"></i>Gửi Dữ Liệu Lên Server
+            </button>
+        </div>
+
+        <!-- Card Điều khiển 8 LED -->
+        <div class="stats-card mt-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-lightbulb me-2 text-warning"></i>Điều Khiển 8 LED</h5>
+            <p class="text-muted small mb-3">Bật/tắt 8 đèn LED trên thiết bị cảm biến và thay đổi chế độ tự động hóa.</p>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark bg-opacity-20 rounded-3" style="border: 1px solid rgba(255,255,255,0.05);">
+                <span class="small text-muted fw-semibold">Chế độ cảm biến (Auto)</span>
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" id="sensorAutoBtn" onchange="toggleSensorAuto(this)" checked style="cursor:pointer;">
+                </div>
+            </div>
+
+            <div class="row g-2">
+                {% for pin in [4, 5, 6, 7, 15, 16, 17, 18] %}
+                <div class="col-6 col-sm-3 col-lg-6">
+                    <button id="ledBtn-{{ pin }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="border-radius: 12px; font-size: 0.8rem;" onclick="toggleLED({{ pin }})">
+                        <span class="fw-semibold">LED {{ loop.index }}</span>
+                        <span class="text-muted" style="font-size: 0.65rem;">GPIO {{ pin }}</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+
+    // Đồng bộ hiển thị giá trị thanh trượt
+    const tempSlider = document.getElementById('tempSlider');
+    const tempVal = document.getElementById('tempVal');
+    tempSlider.value = 42.5;
+    tempVal.innerText = '42.5 °C';
+    tempSlider.addEventListener('input', function() {
+        tempVal.innerText = tempSlider.value + ' °C';
+    });
+
+    const humidSlider = document.getElementById('humidSlider');
+    const humidVal = document.getElementById('humidVal');
+    humidSlider.addEventListener('input', function() {
+        humidVal.innerText = humidSlider.value + ' %';
+    });
+
+    // Cấu hình chạy giả lập dữ liệu tự động liên tục
+    let autoSimInterval = null;
+    document.getElementById('autoSimulateSwitch').addEventListener('change', function(e) {
+        if (e.target.checked) {
+            // Tự động gửi dữ liệu mỗi 2 giây
+            autoSimInterval = setInterval(function() {
+                let currentTemp = parseFloat(tempSlider.value);
+                let currentHumid = parseFloat(humidSlider.value);
+
+                // Giả lập giao động ngẫu nhiên hình Sin/Ngẫu nhiên nhỏ
+                currentTemp += (Math.random() - 0.5) * 1.5;
+                currentTemp = Math.max(15, Math.min(45, currentTemp)); // Giới hạn
+
+                currentHumid += Math.floor((Math.random() - 0.5) * 6);
+                currentHumid = Math.max(20, Math.min(100, currentHumid));
+
+                // Cập nhật thanh trượt và text
+                tempSlider.value = currentTemp.toFixed(1);
+                tempVal.innerText = tempSlider.value + ' °C';
+
+                humidSlider.value = currentHumid;
+                humidVal.innerText = humidSlider.value + ' %';
+
+                // Bắn API
+                sendSimulatedData();
+            }, 2000);
+        } else {
+            if (autoSimInterval) {
+                clearInterval(autoSimInterval);
+                autoSimInterval = null;
+            }
+        }
+    });
+
+    // Lắng nghe sự kiện bật/tắt AI Autopilot
+    const aiAutopilotSwitch = document.getElementById('aiAutopilotSwitch');
+    
+    // Tải trạng thái Autopilot hiện tại từ Server khi load trang
+    fetch('/api/ai/autopilot/status')
+        .then(res => res.json())
+        .then(data => {
+            if (aiAutopilotSwitch) aiAutopilotSwitch.checked = data.active;
+        });
+
+    if (aiAutopilotSwitch) {
+        aiAutopilotSwitch.addEventListener('change', function(e) {
+            const status = e.target.checked;
+            fetch('/api/ai/autopilot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active: status })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("AI Autopilot status updated to:", data.active);
+            })
+            .catch(err => {
+                console.error("Lỗi thay đổi chế độ AI Autopilot:", err);
+            });
+        });
+    }
+
+    // Hàm gọi API POST để cập nhật dữ liệu cảm biến (Gửi dữ liệu ảo lên Server)
+    function sendSimulatedData() {
+        const temp = parseFloat(tempSlider.value);
+        const humid = parseFloat(humidSlider.value);
+
+        // Gửi Nhiệt Độ lên Sensor ID 1
+        fetch('/api/sensors/1/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: temp })
+        });
+
+        // Gửi Độ Ẩm lên Sensor ID 2
+        fetch('/api/sensors/2/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: humid })
+        })
+        .then(() => {
+            console.log("Đã gửi dữ liệu giả lập thành công!");
+        });
+    }
+
+    // Khởi tạo đồ thị Line Chart
+    const ctxSensor = document.getElementById('sensorRealtimeChart').getContext('2d');
+    
+    let tempGradient = ctxSensor.createLinearGradient(0, 0, 0, 300);
+    tempGradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
+    tempGradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+    let humidGradient = ctxSensor.createLinearGradient(0, 0, 0, 300);
+    humidGradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    humidGradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+    const chart = new Chart(ctxSensor, {
+        type: 'line',
+        data: {
+            labels: ['08:00', '08:05', '08:10', '08:15', '08:20', '08:25', '08:30'],
+            datasets: [
+                {
+                    label: 'Nhiệt độ (°C)',
+                    data: [26.2, 26.5, 27.1, 27.8, 28.2, 32.5, 42.5],
+                    borderColor: '#ef4444',
+                    backgroundColor: tempGradient,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#ef4444'
+                },
+                {
+                    label: 'Độ ẩm (%)',
+                    data: [72, 70, 68, 67, 66, 65, 65],
+                    borderColor: '#3b82f6',
+                    backgroundColor: humidGradient,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#3b82f6'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { 
+                legend: { 
+                    position: 'top',
+                    labels: { color: '#f4f4f5' }
+                },
+                tooltip: {
+                    backgroundColor: '#18181b',
+                    titleColor: '#fff',
+                    bodyColor: '#a1a1aa',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: false, 
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#a1a1aa' }
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: '#a1a1aa' }
+                }
+            }
+        }
+    });
+
+    // Lắng nghe sự kiện truyền dữ liệu cảm biến thời gian thực qua Socket.io
+    socket.on('sensor_telemetry_update', function(data) {
+        console.log("Real-time telemetry updated:", data);
+        
+        const time = data.timestamp;
+        const val = data.value;
+        const sensorId = data.sensor_id;
+
+        // Cập nhật Cảm biến Nhiệt độ (ID = 1)
+        if (sensorId === 1) {
+            const cell = document.querySelector('#sensor-row-1 td:nth-child(5)');
+            const row = document.getElementById('sensor-row-1');
+            if (cell) cell.innerHTML = `<span class="text-danger fw-bold">${val} ${data.unit}</span>`;
+            if (row) {
+                row.classList.remove('flash-red');
+                void row.offsetWidth; // Restart animation
+                row.classList.add('flash-red');
+            }
+            
+            chart.data.labels.shift();
+            chart.data.labels.push(time);
+            chart.data.datasets[0].data.shift();
+            chart.data.datasets[0].data.push(val);
+            chart.update();
+        }
+        // Cập nhật Cảm biến Độ ẩm (ID = 2)
+        else if (sensorId === 2) {
+            const cell = document.querySelector('#sensor-row-2 td:nth-child(5)');
+            const row = document.getElementById('sensor-row-2');
+            if (cell) cell.innerHTML = `<span class="text-primary fw-bold">${val} ${data.unit}</span>`;
+            if (row) {
+                row.classList.remove('flash-green');
+                void row.offsetWidth; // Restart animation
+                row.classList.add('flash-green');
+            }
+            
+            chart.data.datasets[1].data.shift();
+            chart.data.datasets[1].data.push(val);
+            chart.update();
+        }
+    });
+
+    // Tự động bật cảnh báo quá nhiệt khi vừa load trang
+    document.addEventListener("DOMContentLoaded", function() {
+        const initialTemp = 42.5;
+        const alertBanner = document.getElementById('overheat-alert-banner');
+        const alertVal = document.getElementById('alert-temp-val');
+        const modalTempVal = document.getElementById('modal-temp-val');
+        
+        if (alertVal && alertBanner) {
+            alertVal.innerText = initialTemp;
+            alertBanner.style.display = 'block';
+            
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                badge.innerText = '1';
+                badge.style.display = 'block';
+            }
+            
+            const noNotif = document.getElementById('no-notifications');
+            if (noNotif) noNotif.remove();
+            
+            if (!document.getElementById('overheat-notif-item')) {
+                const notifList = document.getElementById('notification-list');
+                if (notifList) {
+                    const li = document.createElement('li');
+                    li.id = 'overheat-notif-item';
+                    li.className = 'p-2 border-bottom border-secondary border-opacity-20';
+                    li.innerHTML = `
+                        <a href="/sensors" class="text-decoration-none text-white small d-block">
+                            <span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>QUÁ NHIỆT KHẨN CẤP</span>
+                            <div class="text-white-50 mt-1">DHT22 (ID 1) vượt ngưỡng: <b class="text-danger">${initialTemp}°C</b></div>
+                        </a>
+                    `;
+                    notifList.appendChild(li);
+                }
+            }
+            
+            if (modalTempVal) {
+                modalTempVal.innerText = initialTemp;
+                // Bật modal khẩn cấp đề xuất
+                const overheatModal = new bootstrap.Modal(document.getElementById('overheatModal'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                overheatModal.show();
+                isAlerting = true;
+            }
+        }
+    });
+
+    // --- TÍNH NĂNG ĐIỀU KHIỂN 8 LED ---
+    async function fetchLedState() {
+        try {
+            const r = await fetch('/api/led');
+            const d = await r.json();
+            const pins = [4, 5, 6, 7, 15, 16, 17, 18];
+            pins.forEach(pin => {
+                const state = d['led_' + pin] !== undefined ? d['led_' + pin] : 0;
+                const btn = document.getElementById('ledBtn-' + pin);
+                if (btn) {
+                    if (state === 1) {
+                        btn.className = 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+                    } else {
+                        btn.className = 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+                    }
+                }
+            });
+            const autoState = d['sensor_auto'] !== undefined ? d['sensor_auto'] : 1;
+            document.getElementById('sensorAutoBtn').checked = (autoState === 1);
+        } catch(e) {
+            console.error("Lỗi đồng bộ trạng thái LED:", e);
+        }
+    }
+
+    async function toggleLED(pin) {
+        const btn = document.getElementById('ledBtn-' + pin);
+        const isCurrentlyOn = btn && btn.classList.contains('btn-success');
+        const newState = isCurrentlyOn ? 0 : 1;
+        
+        // Cập nhật UI tạm thời
+        if (btn) {
+            btn.className = newState === 1 
+                ? 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none' 
+                : 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+        }
+        
+        try {
+            await fetch('/api/led', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_id: 'led_' + pin, state: newState })
+            });
+        } catch(e) {
+            console.error("Lỗi điều khiển LED:", e);
+            // Hoàn tác UI nếu lỗi
+            if (btn) {
+                btn.className = isCurrentlyOn 
+                    ? 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none' 
+                    : 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+            }
+        }
+    }
+
+    async function toggleSensorAuto(el) {
+        const newState = el.checked ? 1 : 0;
+        try {
+            await fetch('/api/led', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_id: 'sensor_auto', state: newState })
+            });
+        } catch(e) {
+            console.error("Lỗi thay đổi chế độ tự động cảm biến:", e);
+            el.checked = !el.checked;
+        }
+    }
+
+    // Lắng nghe sự kiện AI kích hoạt bật/tắt thiết bị qua SocketIO để đồng bộ tức thời
+    socket.on('ai_control_trigger', function(data) {
+        console.log("🤖 [AI Socket Trigger] Đồng bộ thiết bị:", data);
+        const pin = data.pin;
+        const btn = document.getElementById('ledBtn-' + pin);
+        if (btn) {
+            if (data.action === 'fan_on') {
+                btn.className = 'btn btn-success w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+            } else if (data.action === 'power_off') {
+                btn.className = 'btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center justify-content-center text-decoration-none';
+            }
+        }
+    });
+
+    // Thêm vòng lặp kiểm tra trạng thái LED mỗi 3 giây
+    fetchLedState();
+    setInterval(fetchLedState, 3000);
+</script>
+{% endblock %}
