@@ -1,0 +1,416 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #090a0f;
+    --panel-dark: rgba(13, 15, 22, 0.85);
+    --panel-border: rgba(0, 240, 255, 0.2);
+    --primary: #00f0ff;
+    --primary-glow: rgba(0, 240, 255, 0.25);
+    --secondary: #ff007f;
+    --secondary-glow: rgba(255, 0, 127, 0.25);
+    --success: #39ff14;
+    --success-glow: rgba(57, 255, 20, 0.25);
+    --danger: #ff003c;
+    --danger-glow: rgba(255, 0, 60, 0.25);
+    --warning: #ffaa00;
+    --warning-glow: rgba(255, 170, 0, 0.25);
+    --text-primary: #e2e8f0;
+    --text-muted: #64748b;
+    --sidebar-width: 260px;
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-dark);
+    background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+    background-size: 25px 25px;
+    color: var(--text-primary);
+    overflow-x: hidden;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* CRT Screen Scanlines Overlay for retro sci-fi vibe */
+body::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 9999;
+    background-size: 100% 4px, 6px 100%;
+    pointer-events: none;
+    opacity: 0.2;
+}
+
+/* Sidebar Sci-Fi Redesign */
+#sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    top: 0; left: 0;
+    background: rgba(8, 9, 14, 0.95);
+    border-right: 2px solid var(--panel-border);
+    box-shadow: 5px 0 25px rgba(0, 240, 255, 0.05);
+    z-index: 1000;
+    padding: 2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar .brand {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    padding: 0.5rem 1rem 1.75rem 1rem;
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary-glow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px dashed rgba(0, 240, 255, 0.15);
+}
+
+#sidebar ul.nav {
+    margin-top: 2rem;
+    gap: 12px;
+}
+
+#sidebar .nav-link {
+    color: var(--text-muted);
+    padding: 0.85rem 1.2rem;
+    border-radius: 6px;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+#sidebar .nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; height: 100%; width: 3px;
+    background: var(--primary);
+    transform: scaleY(0);
+    transition: var(--transition);
+}
+
+#sidebar .nav-link:hover {
+    color: #fff;
+    background: rgba(0, 240, 255, 0.04);
+    border-color: rgba(0, 240, 255, 0.1);
+}
+
+#sidebar .nav-link.active {
+    background: rgba(0, 240, 255, 0.07);
+    color: #fff;
+    border-color: var(--panel-border);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+#sidebar .nav-link.active::before {
+    transform: scaleY(1);
+}
+
+#sidebar .nav-link i {
+    font-size: 1.1rem;
+}
+
+#sidebar .nav-link.active i {
+    color: var(--primary);
+    filter: drop-shadow(0 0 5px var(--primary));
+}
+
+/* Main Content Area */
+#main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    transition: var(--transition);
+}
+
+/* Top Navbar HUD Style */
+.top-navbar {
+    background: rgba(9, 10, 15, 0.9);
+    border-bottom: 2px solid var(--panel-border);
+    padding: 1.2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.search-bar input {
+    background: rgba(0, 240, 255, 0.03) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    font-size: 0.85rem;
+    width: 250px;
+}
+
+.search-bar input:focus {
+    width: 300px;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 15px var(--primary-glow) !important;
+}
+
+/* Cybernetic HUD Panels */
+.stats-card, .chart-container {
+    background: var(--panel-dark);
+    border-radius: 8px;
+    padding: 1.6rem;
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Cyber corner cuts */
+.stats-card::before, .chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 12px; height: 12px;
+    background: var(--primary);
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.stats-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 8px; height: 8px;
+    background: rgba(0, 240, 255, 0.3);
+    clip-path: polygon(0 100%, 0 0, 100% 100%);
+}
+
+/* Glitch Title text */
+.glitch-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+
+/* Circular Gauge design for telemetry */
+.gauge-outer {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: 0 auto;
+}
+
+.gauge-canvas {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+}
+
+.gauge-value {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2.1rem;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    line-height: 1;
+}
+
+.gauge-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 5px;
+}
+
+/* Space cockpit switches (8 LED controller grid) */
+.switch-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 991px) {
+    .switch-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.cyber-switch-panel {
+    background: rgba(18, 20, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 3px solid #64748b;
+    border-radius: 8px;
+    padding: 18px 12px;
+    text-align: center;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 5px 15px rgba(0, 0, 0, 0.4);
+    transition: var(--transition);
+}
+
+.cyber-switch-panel.active {
+    border-top-color: var(--primary);
+    box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1), 0 5px 20px rgba(0, 240, 255, 0.15);
+}
+
+.cyber-switch-panel .led-indicator {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background-color: #334155;
+    margin: 0 auto 12px auto;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    transition: var(--transition);
+}
+
+.cyber-switch-panel.active .led-indicator {
+    background-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary);
+}
+
+/* Lever mechanical toggle button */
+.lever-toggle {
+    position: relative;
+    width: 32px;
+    height: 60px;
+    background: #0f1015;
+    border: 2px solid #334155;
+    border-radius: 6px;
+    margin: 0 auto;
+    cursor: pointer;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+}
+
+.lever-toggle::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    width: 20px;
+    height: 24px;
+    background: linear-gradient(180deg, #475569 0%, #1e293b 100%);
+    border: 1px solid #64748b;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    transition: top 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Lever UP state (OFF) */
+.lever-toggle.off::before {
+    top: 30px;
+    background: linear-gradient(180deg, #ff003c 0%, #990024 100%);
+    border-color: #ff3b6c;
+}
+
+/* Lever DOWN state (ON) */
+.lever-toggle.on::before {
+    top: 4px;
+    background: linear-gradient(180deg, #39ff14 0%, #1a990a 100%);
+    border-color: #7cff63;
+}
+
+.cyber-switch-panel .switch-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    margin-top: 12px;
+    margin-bottom: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Floating AI Chat widget - High Tech styling */
+#ai-chat-box {
+    background: rgba(10, 11, 15, 0.96) !important;
+    border: 2px solid var(--primary) !important;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Retro table design */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-primary);
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.table thead th {
+    border-bottom: 2px solid var(--panel-border);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.table tbody tr {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(255,255,255,0.03);
+    transition: var(--transition);
+}
+
+.table tbody tr:hover {
+    background: rgba(0, 240, 255, 0.03);
+}
+
+.table td {
+    padding: 12px 16px;
+    border: 0;
+}
+
+.table td:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-left: 2px solid transparent;
+}
+
+.table tr:hover td:first-child {
+    border-left-color: var(--primary);
+}
+
+.table td:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Animations & Rotations */
+.rotate-speed {
+    animation: rotateFan 2s linear infinite;
+}
+
+.rotate-speed-fast {
+    animation: rotateFan 0.6s linear infinite;
+}
+
+@keyframes rotateFan {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.pulse-primary {
+    animation: neonPulse 2s infinite alternate;
+}
+
+@keyframes neonPulse {
+    from { box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); }
+    to { box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); }
+}
+
+.custom-lcd-font {
+    font-family: 'Share Tech Mono', monospace;
+}

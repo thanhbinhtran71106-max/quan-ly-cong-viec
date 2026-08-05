@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Điều Khiển</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SheetJS Excel Library -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Background Glowing Orbs -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-microchip me-2"></i> App Điều Khiển
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/sensors">
+                    <i class="fa-solid fa-temperature-high"></i> Sensors
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/distance">
+                    <i class="fa-solid fa-ruler-horizontal"></i> Đo khoảng cách
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/auth/logs">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Nhật Ký Hệ Thống
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fa-solid fa-server"></i> Devices
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fa-solid fa-users"></i> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Navbar -->
+        <header class="top-navbar">
+            <div class="search-bar position-relative">
+                <i class="fa-solid fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" class="form-control rounded-pill ps-5 border-0 bg-light" placeholder="Search devices...">
+            </div>
+            <div class="user-profile d-flex align-items-center gap-3">
+                <!-- Dropdown Thông Báo -->
+                <div class="dropdown">
+                    <button class="btn btn-link position-relative text-white p-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" id="bellButton">
+                        <i class="fa-regular fa-bell fs-5"></i>
+                        <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; display: none;">
+                            0
+                        </span>
+                    </button>
+                    <ul id="notification-list" class="dropdown-menu dropdown-menu-end p-2" style="background: #121216; border: 1px solid rgba(255,255,255,0.1); width: 300px; border-radius: 16px;">
+                        <li class="dropdown-header text-muted small border-bottom border-secondary pb-2 mb-2">Thông Báo Gần Đây</li>
+                        <li id="no-notifications" class="text-center py-3 text-muted small">Không có thông báo mới</li>
+                    </ul>
+                </div>
+                <div class="d-flex align-items-center gap-2 ms-3">
+                    <img src="https://ui-avatars.com/api/?name={{ current_user.username if current_user else 'Admin' }}&background=4f46e5&color=fff" alt="User" class="rounded-circle" width="40">
+                    <div class="d-none d-md-block">
+                        <div class="fw-bold fs-6" style="line-height: 1;">{{ current_user.username if current_user else 'Admin' }}</div>
+                        <small class="text-muted" style="font-size: 0.75rem;">{{ current_user.role.name if current_user and current_user.role else 'System Manager' }}</small>
+                    </div>
+                    <a href="/api/auth/logout" class="btn btn-sm btn-outline-danger ms-2 rounded-pill px-3" title="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Alerts Container (Cảnh báo quá nhiệt toàn cục) -->
+        <div id="overheat-alert-banner" class="px-4 pt-3" style="display: none;">
+            <div class="alert alert-danger border-danger border-opacity-30 bg-danger bg-opacity-10 text-white p-3 rounded-4 shadow-lg" style="backdrop-filter: blur(15px); border: 1px solid rgba(239, 68, 68, 0.25);">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stats-icon icon-red bg-danger bg-opacity-20 text-danger border-0">
+                            <i class="fa-solid fa-fire-flame-curved fa-bounce"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1 text-danger">CẢNH BÁO QUÁ NHIỆT (OVERHEATING)!</h6>
+                            <span class="text-white-50 small">Nhiệt độ cảm biến <span class="fw-bold text-white">DHT22 (ID: 1)</span> vượt ngưỡng an toàn: <span id="alert-temp-val" class="fw-bold text-danger">--</span> °C</span>
+                        </div>
+                    </div>
+                    <!-- Quick Actions -->
+                    <div class="d-flex align-items-center gap-2">
+                        <button onclick="handleOverheatAction('fan_on')" class="btn btn-sm btn-success rounded-pill px-3">
+                            <i class="fa-solid fa-fan me-1"></i>Bật Quạt Gió
+                        </button>
+                        <button onclick="handleOverheatAction('power_off')" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                            <i class="fa-solid fa-power-off me-1"></i>Tắt Nguồn
+                        </button>
+                        <a href="tel:0987654321" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3 ms-2">
+                            <i class="fa-solid fa-phone me-1"></i>Hotline Kỹ Thuật: 0987.654.321
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <main class="p-4">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Modal Thêm Thiết Bị Toàn Cục -->
+    <div class="modal fade" id="addDeviceModal" tabindex="-1" aria-labelledby="addDeviceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #fff;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="addDeviceModalLabel"><i class="fa-solid fa-server me-2 text-primary"></i>Thêm Thiết Bị Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-warning small fw-bold">Chọn gợi ý cấu hình sẵn (Presets)</label>
+                        <select id="devicePreset" class="form-select bg-dark border-warning text-warning" onchange="applyDevicePreset()">
+                            <option value="custom">-- Tùy chỉnh (Tự nhập) --</option>
+                            <option value="esp32_dht22">ESP32 + Cảm biến DHT22 (Nhiệt độ / Độ ẩm)</option>
+                            <option value="stm32_bmp280">STM32 + Cảm biến BMP280 (Áp suất)</option>
+                            <option value="rpi_camera">Raspberry Pi + Camera AI (Giám sát hình ảnh)</option>
+                            <option value="plc_modbus">PLC Mitsubishi + Cổng Modbus (Giám sát công nghiệp)</option>
+                        </select>
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.1);">
+                    <form id="addDeviceForm">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Tên thiết bị</label>
+                            <input type="text" id="deviceName" class="form-control bg-dark border-secondary text-white" placeholder="Tên thiết bị..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Loại thiết bị</label>
+                            <select id="deviceType" class="form-select bg-dark border-secondary text-white" required>
+                                <option value="ESP32">ESP32</option>
+                                <option value="STM32">STM32</option>
+                                <option value="Raspberry Pi">Raspberry Pi</option>
+                                <option value="PLC">PLC</option>
+                                <option value="Camera AI">Camera AI</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Trạng thái ban đầu</label>
+                            <select id="deviceStatus" class="form-select bg-dark border-secondary text-white">
+                                <option value="active">Hoạt động (Active)</option>
+                                <option value="offline">Ngoại tuyến (Offline)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">MQTT Publish Topic (Số liệu)</label>
+                            <input type="text" id="deviceTopic" class="form-control bg-dark border-secondary text-white" placeholder="VD: v1/devices/1/sensors/1/telemetry">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 mt-3 rounded-pill">Đăng Ký Thiết Bị</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đề Xuất Xử Lý Khẩn Cấp (Overheat Popup Modal) -->
+    <div class="modal fade" id="overheatModal" tabindex="-1" aria-labelledby="overheatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: rgba(22, 10, 10, 0.95); border: 2px solid #ef4444; border-radius: 24px; color: #fff; box-shadow: 0 0 35px rgba(239, 68, 68, 0.4); backdrop-filter: blur(25px);">
+                <div class="modal-header border-0 pb-0 text-end d-block">
+                    <button type="button" class="btn-close btn-close-white float-end" data-bs-dismiss="modal" aria-label="Close" onclick="closeOverheatModal()"></button>
+                    <div class="stats-icon bg-danger bg-opacity-20 text-danger border-0 mx-auto mb-3" style="width: 70px; height: 70px; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                        <i class="fa-solid fa-triangle-exclamation fa-fade"></i>
+                    </div>
+                    <h4 class="modal-title fw-bold text-danger text-center" id="overheatModalLabel">CẢNH BÁO QUÁ NHIỆT KHẨN CẤP!</h4>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-4 text-white-50">Cảm biến <span class="text-white fw-bold">DHT22 (ID: 1)</span> phát hiện nhiệt độ quá cao: <span id="modal-temp-val" class="fs-3 fw-bold text-danger">--</span> °C. Vui lòng chọn phương án đề xuất xử lý ngay lập tức để tránh hư hỏng phần cứng!</p>
+                    
+                    <div class="d-grid gap-3 mb-3">
+                        <button onclick="handleOverheatAction('fan_on'); closeOverheatModal();" class="btn btn-success py-3 rounded-4 fw-bold shadow-lg">
+                            <i class="fa-solid fa-fan fa-spin me-2"></i>Đề xuất: BẬT QUẠT THÔNG GIÓ LÀM MÁT
+                        </button>
+                        <button onclick="handleOverheatAction('power_off'); closeOverheatModal();" class="btn btn-outline-danger py-3 rounded-4 fw-bold">
+                            <i class="fa-solid fa-power-off me-2"></i>Ngắt Nguồn Thiết Bị Ngay
+                        </button>
+                    </div>
+                    
+                    <div class="p-3 bg-dark bg-opacity-50 rounded-4 border border-secondary border-opacity-20 mt-4">
+                        <p class="small text-muted mb-2"><i class="fa-solid fa-info-circle me-1 text-warning"></i>Gặp sự cố lớn? Gọi hỗ trợ khẩn cấp:</p>
+                        <a href="tel:0987654321" class="btn btn-warning text-dark fw-bold rounded-pill w-100 py-2">
+                            <i class="fa-solid fa-phone me-1"></i>Hotline Kỹ Thuật: 0987.654.321
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- Modal Hồ Sơ Cá Nhân (Profile Modal) -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; color: #fff; box-shadow: 0 0 25px rgba(59, 130, 246, 0.2); backdrop-filter: blur(25px);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary" id="profileModalLabel"><i class="fa-solid fa-id-card me-2"></i>Hồ Sơ Nhân Viên</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="user-avatar text-uppercase mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold text-white shadow-lg" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); font-size: 2.2rem; border: 3px solid rgba(255,255,255,0.1);">
+                        {{ current_user.username[:2] }}
+                    </div>
+                    <h4 class="fw-bold mb-1 text-white">{{ current_user.username }}</h4>
+                    <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30 px-3 py-1 rounded-pill mb-4">{{ current_user.role.name }}</span>
+                    
+                    <div class="text-start bg-dark bg-opacity-50 p-4 rounded-4 border border-secondary border-opacity-10">
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Email liên hệ</label>
+                            <div class="fw-semibold text-white-50"><i class="fa-solid fa-envelope me-2 text-primary"></i><span id="profile-email">--</span></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Quyền hạn hệ thống</label>
+                            <div class="fw-semibold text-white-50"><i class="fa-solid fa-user-shield me-2 text-success"></i><span id="profile-role">--</span></div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="small text-muted mb-1">Ngày gia nhập hệ thống</label>
+                            <div class="fw-semibold text-white-50"><i class="fa-solid fa-calendar-day me-2 text-warning"></i><span id="profile-date">--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Mật Khẩu (Change Password Modal) -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; color: #fff; box-shadow: 0 0 25px rgba(245, 158, 11, 0.2); backdrop-filter: blur(25px);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-warning" id="changePasswordModalLabel"><i class="fa-solid fa-key me-2"></i>Đổi Mật Khẩu Bảo Mật</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Mật khẩu hiện tại</label>
+                            <input type="password" id="oldPassword" class="form-control bg-dark border-secondary border-opacity-30 text-white rounded-3" required placeholder="Nhập mật khẩu hiện tại">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Mật khẩu mới</label>
+                            <input type="password" id="newPassword" class="form-control bg-dark border-secondary border-opacity-30 text-white rounded-3" required placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Xác nhận mật khẩu mới</label>
+                            <input type="password" id="confirmPassword" class="form-control bg-dark border-secondary border-opacity-30 text-white rounded-3" required placeholder="Nhập lại mật khẩu mới">
+                        </div>
+                        <button type="submit" class="btn btn-warning text-dark w-100 py-2 mt-3 rounded-pill fw-bold">Xác Nhận Đổi Mật Khẩu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Socket.io -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Hàm áp dụng nhanh cấu hình gợi ý thiết bị
+        function applyDevicePreset() {
+            const preset = document.getElementById('devicePreset').value;
+            const nameField = document.getElementById('deviceName');
+            const typeField = document.getElementById('deviceType');
+            const topicField = document.getElementById('deviceTopic');
+
+            if (preset === 'esp32_dht22') {
+                nameField.value = 'ESP32 IoT Node';
+                typeField.value = 'ESP32';
+                topicField.value = 'v1/devices/1/sensors/1/telemetry';
+            } else if (preset === 'stm32_bmp280') {
+                nameField.value = 'STM32 Telemetry Node';
+                typeField.value = 'STM32';
+                topicField.value = 'v1/devices/1/sensors/3/telemetry';
+            } else if (preset === 'rpi_camera') {
+                nameField.value = 'RPI AI Vision Node';
+                typeField.value = 'Raspberry Pi';
+                topicField.value = 'v1/devices/4/camera/telemetry';
+            } else if (preset === 'plc_modbus') {
+                nameField.value = 'PLC Mitsubishi Modbus Gate';
+                typeField.value = 'PLC';
+                topicField.value = 'v1/devices/5/plc/telemetry';
+            } else {
+                nameField.value = '';
+                topicField.value = '';
+            }
+        }
+
+        // Xử lý submit form thêm thiết bị qua API (Bổ sung kiểm tra Null an toàn)
+        const addDeviceForm = document.getElementById('addDeviceForm');
+        if (addDeviceForm) {
+            addDeviceForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const data = {
+                    name: document.getElementById('deviceName').value,
+                    type_name: document.getElementById('deviceType').value,
+                    status: document.getElementById('deviceStatus').value,
+                    topics: []
+                };
+                const topicVal = document.getElementById('deviceTopic').value;
+                if (topicVal) {
+                    data.topics.push({
+                        topic: topicVal,
+                        direction: 'pub',
+                        qos: 0
+                    });
+                }
+
+                fetch('/api/iot/devices', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.error) {
+                        alert('Lỗi: ' + result.error);
+                    } else {
+                        alert('Thêm thiết bị thành công!');
+                        location.reload();
+                    }
+                })
+                .catch(err => {
+                    console.error('Err:', err);
+                    alert('Lỗi kết nối tới Server!');
+                });
+            });
+        }
+
+        // Khởi chạy SocketIO để giám sát cảnh báo quá nhiệt toàn cục
+        const globalSocket = io();
+        let isAlerting = false;
+        
+        globalSocket.on('sensor_telemetry_update', function(data) {
+            // Kiểm tra nếu là Cảm biến nhiệt độ (ID = 1) và nhiệt độ >= 35 độ C
+            if (data.sensor_id === 1) {
+                const temp = parseFloat(data.value);
+                const alertBanner = document.getElementById('overheat-alert-banner');
+                const alertVal = document.getElementById('alert-temp-val');
+                const modalTempVal = document.getElementById('modal-temp-val');
+                
+                if (temp >= 35.0) {
+                    if (alertVal) alertVal.innerText = temp;
+                    if (alertBanner) alertBanner.style.display = 'block';
+                    
+                    // 1. Cập nhật Số lượng trên Chuông Thông Báo
+                    const badge = document.getElementById('notification-badge');
+                    if (badge) {
+                        badge.innerText = '1';
+                        badge.style.display = 'block';
+                    }
+                    
+                    // Xóa dòng "Không có thông báo mới"
+                    const noNotif = document.getElementById('no-notifications');
+                    if (noNotif) noNotif.remove();
+                    
+                    // Thêm thông báo chi tiết vào dropdown
+                    if (!document.getElementById('overheat-notif-item')) {
+                        const notifList = document.getElementById('notification-list');
+                        if (notifList) {
+                            const li = document.createElement('li');
+                            li.id = 'overheat-notif-item';
+                            li.className = 'p-2 border-bottom border-secondary border-opacity-20';
+                            li.innerHTML = `
+                                <a href="/sensors" class="text-decoration-none text-white small d-block">
+                                    <span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>QUÁ NHIỆT KHẨN CẤP</span>
+                                    <div class="text-white-50 mt-1">DHT22 (ID 1) vượt ngưỡng: <b class="text-danger">${temp}°C</b></div>
+                                </a>
+                            `;
+                            notifList.appendChild(li);
+                        }
+                    } else {
+                        const bTag = document.getElementById('overheat-notif-item').querySelector('b');
+                        if (bTag) bTag.innerText = temp + '°C';
+                    }
+                    
+                    // 2. Nhảy Modal Cảnh báo Đề xuất khẩn cấp ra giữa màn hình
+                    if (!isAlerting) {
+                        isAlerting = true;
+                        if (modalTempVal) modalTempVal.innerText = temp;
+                        const overheatModal = new bootstrap.Modal(document.getElementById('overheatModal'), {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        overheatModal.show();
+                    } else {
+                        if (modalTempVal) modalTempVal.innerText = temp;
+                    }
+                } else {
+                    if (alertBanner) alertBanner.style.display = 'none';
+                    const badge = document.getElementById('notification-badge');
+                    if (badge) badge.style.display = 'none';
+                    isAlerting = false;
+                }
+            }
+        });
+
+        // Hàm đóng Modal khẩn cấp
+        function closeOverheatModal() {
+            try {
+                const modalEl = document.getElementById('overheatModal');
+                const modalObj = bootstrap.Modal.getInstance(modalEl);
+                if (modalObj) modalObj.hide();
+            } catch (err) {
+                console.error("Lỗi đóng modal:", err);
+            }
+        }
+
+        // Hàm phản hồi xử lý nhanh khi có sự cố quá nhiệt (Đảm bảo an toàn logic tuyệt đối)
+        function handleOverheatAction(actionType) {
+            try {
+                let actionName = "";
+                let details = "";
+
+                if (actionType === 'fan_on') {
+                    actionName = "Kích Hoạt Thiết Bị";
+                    details = "Đã kích hoạt hệ thống Quạt gió khẩn cấp thông qua bảng điều khiển Quick Response.";
+                    alert("Hệ thống quạt thông gió khẩn cấp ĐÃ BẬT! Bắt đầu quá trình hạ nhiệt tự động...");
+                    
+                    // Đồng bộ giao diện thanh trượt về mức bình thường 26.5 độ C
+                    const tempSlider = document.getElementById('tempSlider');
+                    const tempVal = document.getElementById('tempVal');
+                    if (tempSlider && tempVal) {
+                        tempSlider.value = 26.5;
+                        tempVal.innerText = '26.5 °C';
+                    }
+                    
+                    // Gọi API gửi giá trị hạ nhiệt 26.5 lên Server
+                    fetch('/api/sensors/1/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ value: 26.5 })
+                    }).catch(err => console.error("Lỗi gửi API hạ nhiệt:", err));
+                    
+                } else if (actionType === 'power_off') {
+                    actionName = "Ngắt Nguồn";
+                    details = "Đã ra lệnh ngắt nguồn điện khẩn cấp thiết bị IoT để bảo vệ phần cứng.";
+                    alert("Đã gửi lệnh ngắt nguồn thiết bị khẩn cấp! Nhiệt độ sẽ hạ dần về 25.0 °C.");
+                    
+                    // Đồng bộ giao diện thanh trượt về mức an toàn 25.0 độ C
+                    const tempSlider = document.getElementById('tempSlider');
+                    const tempVal = document.getElementById('tempVal');
+                    if (tempSlider && tempVal) {
+                        tempSlider.value = 25.0;
+                        tempVal.innerText = '25.0 °C';
+                    }
+                    
+                    // Gửi giá trị 25.0 lên Server
+                    fetch('/api/sensors/1/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ value: 25.0 })
+                    }).catch(err => console.error("Lỗi gửi API ngắt nguồn:", err));
+                }
+
+                // Gửi log về hệ thống CSDL (Đảm bảo chạy tiếp ở phần .finally kể cả khi lưu log lỗi)
+                fetch('/api/auth/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: actionName, details: details })
+                })
+                .catch(err => console.error("Lỗi ghi log audit:", err))
+                .finally(() => {
+                    const alertBanner = document.getElementById('overheat-alert-banner');
+                    if (alertBanner) alertBanner.style.display = 'none';
+                    
+                    const badge = document.getElementById('notification-badge');
+                    if (badge) badge.style.display = 'none';
+                    
+                    isAlerting = false;
+                    
+                    // Nếu đang ở trang logs, reload để hiện bản ghi mới
+                    if (window.location.pathname.includes('/logs')) {
+                        location.reload();
+                    }
+                });
+            } catch (err) {
+                console.error("Lỗi xử lý khẩn cấp:", err);
+            }
+        }
+
+        // Lắng nghe tín hiệu tự động dập tắt cảnh báo từ AI Autopilot
+        globalSocket.on('ai_autopilot_trigger', function(data) {
+            console.log("🤖 [AI Autopilot]: Nhận tín hiệu điều khiển đàm thoại: " + data.action);
+            if (data.action === 'fan_on') {
+                handleOverheatAction('fan_on');
+                closeOverheatModal();
+            } else if (data.action === 'power_off') {
+                handleOverheatAction('power_off');
+                closeOverheatModal();
+            }
+        });
+
+        // Xử lý bật/tắt cửa sổ Chat AI và các sự kiện liên quan (Đặt trong DOMContentLoaded để tránh lỗi Null DOM)
+        document.addEventListener("DOMContentLoaded", function() {
+            // Các hàm tương tác mở Modal Hồ sơ và Đổi mật khẩu
+            window.showProfileModal = function() {
+                fetch('/api/auth/profile')
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('profile-email').innerText = data.email || 'Chưa cập nhật (admin@aiot.com)';
+                        document.getElementById('profile-role').innerText = data.role === 'admin' ? 'Quản trị viên cấp cao' : 'Nhân viên vận hành';
+                        if (data.created_at) {
+                            const date = new Date(data.created_at);
+                            document.getElementById('profile-date').innerText = date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN');
+                        }
+                        const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+                        modal.show();
+                    })
+                    .catch(err => console.error("Lỗi lấy thông tin profile:", err));
+            };
+
+            window.showChangePasswordModal = function() {
+                const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+                modal.show();
+            };
+
+            // Xử lý đổi mật khẩu qua Form submit
+            const cpForm = document.getElementById('changePasswordForm');
+            if (cpForm) {
+                cpForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const oldPw = document.getElementById('oldPassword').value;
+                    const newPw = document.getElementById('newPassword').value;
+                    const confPw = document.getElementById('confirmPassword').value;
+                    
+                    if (newPw !== confPw) {
+                        alert("Xác nhận mật khẩu mới không khớp!");
+                        return;
+                    }
+                    
+                    fetch('/api/auth/change-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ old_password: oldPw, new_password: newPw })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert("Lỗi: " + data.error);
+                        } else {
+                            alert("Thay đổi mật khẩu thành công!");
+                            const modalEl = document.getElementById('changePasswordModal');
+                            const modalObj = bootstrap.Modal.getInstance(modalEl);
+                            if (modalObj) modalObj.hide();
+                            cpForm.reset();
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Lỗi đổi mật khẩu:", err);
+                        alert("Không thể kết nối tới Server!");
+                    });
+                });
+            }
+
+            const chatBtn = document.getElementById('ai-chat-btn');
+            const chatBox = document.getElementById('ai-chat-box');
+            const chatClose = document.getElementById('ai-chat-close');
+            
+            if (chatBtn && chatBox) {
+                chatBtn.addEventListener('click', () => {
+                    chatBox.classList.toggle('d-none');
+                });
+            }
+            if (chatClose && chatBox) {
+                chatClose.addEventListener('click', () => {
+                    chatBox.classList.add('d-none');
+                });
+            }
+            
+            const chatInput = document.getElementById('ai-chat-input');
+            const chatSend = document.getElementById('ai-chat-send');
+            const chatBody = document.getElementById('ai-chat-body');
+            
+            // Định nghĩa hàm gửi trả lời nhanh toàn cục gắn vào window
+            window.sendQuickReply = function(text) {
+                if (chatInput) {
+                    chatInput.value = text;
+                    sendChatMessage();
+                }
+            };
+            
+            function sendChatMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+                
+                // Thêm tin nhắn của User vào khung chat
+                const userDiv = document.createElement('div');
+                userDiv.className = 'bg-primary bg-opacity-30 p-3 rounded-4 text-white small align-self-end';
+                userDiv.style.maxWidth = '80%';
+                userDiv.innerText = message;
+                chatBody.appendChild(userDiv);
+                
+                chatInput.value = '';
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                // Hiển thị hiệu ứng AI đang suy nghĩ
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'bg-dark bg-opacity-40 p-3 rounded-4 text-white-50 small border border-secondary border-opacity-10 align-self-start';
+                loadingDiv.style.maxWidth = '80%';
+                loadingDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>AI đang phân tích dữ liệu...';
+                chatBody.appendChild(loadingDiv);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                // Gửi API lên Server
+                fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    loadingDiv.innerText = data.response;
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                })
+                .catch(err => {
+                    loadingDiv.innerText = "🤖 [AI Trợ Lý]: Gặp lỗi kết nối với máy chủ AI.";
+                    console.error(err);
+                });
+            }
+            
+            if (chatSend) {
+                chatSend.addEventListener('click', sendChatMessage);
+            }
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Chatbot AI Floating Widget -->
+    <div id="ai-chat-container" style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+        <button id="ai-chat-btn" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center pulse-primary" style="width: 60px; height: 60px; border: 2px solid rgba(255,255,255,0.2);">
+            <i class="fa-solid fa-robot" style="font-size: 1.6rem;"></i>
+        </button>
+        
+        <div id="ai-chat-box" class="card shadow-2xl d-none" style="position: absolute; bottom: 80px; right: 0; width: 350px; height: 480px; background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; backdrop-filter: blur(25px); overflow: hidden; display: flex; flex-direction: column;">
+            <div class="card-header bg-primary bg-opacity-20 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-20 py-3 px-4">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success rounded-circle me-2 animate-pulse" style="width: 10px; height: 10px;"></div>
+                    <span class="fw-bold text-white small">AI Assistant Co-pilot</span>
+                </div>
+                <button type="button" id="ai-chat-close" class="btn-close btn-close-white" style="font-size: 0.8rem;"></button>
+            </div>
+            
+            <div id="ai-chat-body" class="card-body p-3 overflow-y-auto" style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px;">
+                <div class="bg-dark bg-opacity-40 p-3 rounded-4 text-white-50 small border border-secondary border-opacity-10 align-self-start" style="max-width: 80%;">
+                    Xin chào! Tôi là AI Trợ Lý tích hợp. Hệ thống hiện đang an toàn. Bạn cần tôi phân tích số liệu hay hỗ trợ điều khiển thiết bị tự động không?
+                </div>
+            </div>
+            
+            <!-- Trả lời nhanh (Quick Suggestions) -->
+            <div class="p-2 border-top border-secondary border-opacity-20 d-flex flex-wrap gap-1 bg-dark bg-opacity-90">
+                <button onclick="sendQuickReply('Nhiệt độ hiện tại thế nào?')" class="btn btn-sm btn-outline-info rounded-pill py-0 px-2" style="font-size: 0.75rem;"><i class="fa-solid fa-temperature-half me-1"></i>Nhiệt độ</button>
+                <button onclick="sendQuickReply('Hệ thống có an toàn không?')" class="btn btn-sm btn-outline-success rounded-pill py-0 px-2" style="font-size: 0.75rem;"><i class="fa-solid fa-shield-halved me-1"></i>An toàn?</button>
+                <button onclick="sendQuickReply('Bật quạt gió làm mát')" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 0.75rem;"><i class="fa-solid fa-fan me-1"></i>Bật quạt</button>
+                <button onclick="sendQuickReply('Tắt nguồn thiết bị khẩn cấp')" class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2" style="font-size: 0.75rem;"><i class="fa-solid fa-power-off me-1"></i>Tắt nguồn</button>
+            </div>
+            
+            <div class="card-footer p-2 border-top border-secondary border-opacity-20 bg-dark bg-opacity-80">
+                <div class="input-group">
+                    <input type="text" id="ai-chat-input" class="form-control bg-dark border-secondary border-opacity-30 text-white rounded-pill px-3 me-2" placeholder="Hỏi AI về hệ thống..." style="font-size: 0.9rem;">
+                    <button id="ai-chat-send" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-paper-plane" style="font-size: 0.9rem;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
